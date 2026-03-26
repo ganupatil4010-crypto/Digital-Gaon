@@ -22,7 +22,7 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 // MongoDB Connection (Attempt in background)
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 2000 })
     .then(() => {
         console.log('--- MONGODB CONNECTED ---');
     })

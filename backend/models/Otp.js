@@ -14,6 +14,6 @@ const otpSchema = new mongoose.Schema({
         required: true,
         expires: 0 // This will automatically delete the document at expiresAt
     }
-}, { timestamps: true });
+}, { timestamps: true, bufferCommands: false });
 
 module.exports = mongoose.model('Otp', otpSchema);
