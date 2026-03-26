@@ -25,9 +25,12 @@ const OtpVerify = ({ email, onVerifySuccess }) => {
     };
 
     return (
-        <div className="card">
-            <h2 style={{ textAlign: 'center' }}>Secure Verification</h2>
-            <p style={{ textAlign: 'center' }}>A 6-digit code has been sent to <br/><span style={{ color: 'var(--primary)', fontWeight: '600' }}>{email}</span></p>
+        <div className="auth-card">
+            <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>Secure Verification</h2>
+            <p style={{ textAlign: 'center', fontSize: '0.9rem', marginBottom: '2rem' }}>
+                A 6-digit code has been sent to <br/>
+                <span style={{ color: 'var(--primary)', fontWeight: '600' }}>{email}</span>
+            </p>
             
             {error && <div className="error">{error}</div>}
             
@@ -40,25 +43,41 @@ const OtpVerify = ({ email, onVerifySuccess }) => {
                         onChange={(e) => setOtp(e.target.value)}
                         maxLength="6"
                         required
+                        className="form-input"
                         style={{ 
                             textAlign: 'center', 
                             fontSize: '2rem', 
                             letterSpacing: '0.8rem', 
                             fontWeight: '700',
-                            padding: '1.25rem 0.5rem',
-                            background: 'rgba(0,0,0,0.3)',
-                            border: '2px solid var(--glass-border)'
+                            padding: '1rem 0',
+                            margin: 0
                         }}
                     />
                 </div>
-                <button type="submit" disabled={loading}>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
                     {loading ? <div className="spinner"></div> : 'Verify & Sign In'}
                 </button>
             </form>
             
             <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
-                <p style={{ fontSize: '0.9rem', marginBottom: 0 }}>
-                    Didn't receive the code? <button style={{ display: 'inline', background: 'none', padding: 0, border: 'none', color: 'var(--primary)', fontWeight: '600', cursor: 'pointer', boxShadow: 'none', transform: 'none', width: 'auto', fontSize: '0.9rem' }}>Resend Code</button>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                    Didn't receive the code?{' '}
+                    <button 
+                        type="button"
+                        style={{ 
+                            background: 'none', 
+                            padding: 0, 
+                            border: 'none', 
+                            color: 'var(--primary)', 
+                            fontWeight: '600', 
+                            cursor: 'pointer',
+                            width: 'auto',
+                            display: 'inline',
+                            boxShadow: 'none'
+                        }}
+                    >
+                        Resend Code
+                    </button>
                 </p>
             </div>
         </div>

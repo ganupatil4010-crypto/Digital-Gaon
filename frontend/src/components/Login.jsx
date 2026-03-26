@@ -35,9 +35,9 @@ const Login = ({ onGoogleLogin }) => {
     };
 
     return (
-        <div className="card">
-            <h1 style={{ textAlign: 'center' }}>Digital Gaon</h1>
-            <p style={{ textAlign: 'center' }}>Experience the future of rural commerce. Log in to start your journey.</p>
+        <div className="auth-card">
+            <h1>Digital Gaon</h1>
+            <p>Experience the future of rural commerce. Log in to start your journey.</p>
             
             {error && <div className="error">{error}</div>}
             

@@ -39,9 +39,13 @@ function App() {
               isAuthenticated ? (
                 <Navigate to="/dashboard" />
               ) : userEmail ? (
-                <OtpVerify email={userEmail} onVerifySuccess={handleVerifySuccess} />
+                <div className="bg-blobs auth-container">
+                  <OtpVerify email={userEmail} onVerifySuccess={handleVerifySuccess} />
+                </div>
               ) : (
-                <Login onGoogleLogin={handleGoogleLogin} />
+                <div className="bg-blobs auth-container">
+                  <Login onGoogleLogin={handleGoogleLogin} />
+                </div>
               )
             } 
           />
