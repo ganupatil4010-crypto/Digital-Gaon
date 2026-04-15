@@ -1,4 +1,5 @@
 import React from 'react';
+import { LogOut } from 'lucide-react';
 
 const Header = ({ userName, onLogout }) => {
   return (
@@ -22,7 +23,8 @@ const Header = ({ userName, onLogout }) => {
         </div>
       </div>
 
-      <button onClick={onLogout} className="btn btn-danger" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+      <button onClick={onLogout} className="btn btn-danger" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <LogOut size={16} />
         Logout
       </button>
     </header>

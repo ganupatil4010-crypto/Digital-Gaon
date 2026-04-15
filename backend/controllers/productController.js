@@ -3,18 +3,26 @@ const db = require('../database');
 // Add a new product
 exports.addProduct = async (req, res) => {
     try {
-        const { title, price, category, location, description, sellerEmail } = req.body;
+        const { title, price, category, location, description, sellerEmail, img } = req.body;
 
         if (!title || !price || !category || !location) {
             return res.status(400).json({ error: 'Please provide all required fields' });
         }
 
         const stmt = db.prepare(`
-            INSERT INTO products (title, price, category, location, description, sellerEmail)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO products (title, price, category, location, description, sellerEmail, img)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `);
 
-        const result = stmt.run(title, price, category, location, description || '', sellerEmail || '');
+        const result = stmt.run(
+            title, 
+            price, 
+            category, 
+            location, 
+            description || '', 
+            sellerEmail || '', 
+            img || 'https://images.unsplash.com/photo-1592982537447-6f23b3793f77?auto=format&fit=crop&q=80&w=400'
+        );
 
         const newProduct = db.prepare('SELECT * FROM products WHERE id = ?').get(result.lastInsertRowid);
 
@@ -96,7 +104,7 @@ exports.deleteProduct = async (req, res) => {
 exports.editProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { email, title, price, category, location, description } = req.body;
+        const { email, title, price, category, location, description, img } = req.body;
 
         const product = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
 
@@ -110,7 +118,7 @@ exports.editProduct = async (req, res) => {
 
         db.prepare(`
             UPDATE products 
-            SET title = ?, price = ?, category = ?, location = ?, description = ?
+            SET title = ?, price = ?, category = ?, location = ?, description = ?, img = ?
             WHERE id = ?
         `).run(
             title || product.title, 
@@ -118,6 +126,7 @@ exports.editProduct = async (req, res) => {
             category || product.category, 
             location || product.location, 
             description !== undefined ? description : product.description, 
+            img || product.img,
             id
         );
 

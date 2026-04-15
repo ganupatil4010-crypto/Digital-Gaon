@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Pencil, Trash2, Stars, PlusCircle } from 'lucide-react';
 import API_BASE_URL from '../config/api';
 
 const MyListings = () => {
@@ -108,7 +109,10 @@ const MyListings = () => {
           display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
         }}>
           <div className="auth-card" style={{ width: '100%', maxWidth: '500px', margin: '1rem' }}>
-            <h2>Edit "{editingProduct.title}"</h2>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+              <Pencil size={24} color="var(--primary)" />
+              Edit "{editingProduct.title}"
+            </h2>
             <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
               <input className="form-input" name="title" value={editFormData.title} onChange={handleEditChange} placeholder="Title" required />
               <input className="form-input" name="price" value={editFormData.price} onChange={handleEditChange} placeholder="Price" required />
@@ -140,17 +144,17 @@ const MyListings = () => {
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
                 <button 
                   className="btn btn-primary" 
-                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', flex: 1 }}
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                   onClick={() => handleEditClick(product)}
                 >
-                  ✏️ Edit
+                  <Pencil size={14} /> Edit
                 </button>
                 <button 
                   className="btn btn-danger" 
-                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', flex: 1 }}
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                   onClick={() => handleDelete(product._id)}
                 >
-                  🗑️ Delete
+                  <Trash2 size={14} /> Delete
                 </button>
               </div>
             </div>
@@ -169,7 +173,18 @@ const MyListings = () => {
           cursor: 'pointer',
           transition: 'var(--transition)'
         }} className="add-card-placeholder">
-           <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>✨</div>
+           <div style={{ 
+             width: '60px', 
+             height: '60px', 
+             borderRadius: '50%', 
+             background: 'rgba(255, 255, 255, 0.05)', 
+             display: 'flex', 
+             alignItems: 'center', 
+             justifyContent: 'center',
+             marginBottom: '1rem'
+           }}>
+             <Stars size={30} color="var(--primary)" />
+           </div>
            <div style={{ fontWeight: '600' }}>Add New Item</div>
            <p style={{ fontSize: '0.8rem', textAlign: 'center', marginTop: '0.5rem' }}>Ready to sell something else?</p>
         </div>

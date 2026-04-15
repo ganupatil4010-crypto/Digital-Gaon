@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Camera, MapPin, Loader2, Save, CheckCircle, AlertCircle, ShieldAlert } from 'lucide-react';
 
 const Profile = ({ user, userEmail, onUpdate }) => {
   const [formData, setFormData] = useState({
@@ -35,7 +36,7 @@ const Profile = ({ user, userEmail, onUpdate }) => {
     e.preventDefault();
     const email = userEmail || localStorage.getItem('userEmail');
     if (!email) {
-      setSaveMsg('❌ User email not found. Please re-login.');
+      setSaveMsg('User email not found. Please re-login.');
       return;
     }
 
@@ -49,7 +50,7 @@ const Profile = ({ user, userEmail, onUpdate }) => {
         phone: formData.phone,
         avatar: formData.avatar,
       });
-      setSaveMsg('✅ Profile saved successfully!');
+      setSaveMsg('Profile saved successfully!');
       // Notify parent so Header name updates too
       if (onUpdate) {
         onUpdate({
@@ -60,7 +61,7 @@ const Profile = ({ user, userEmail, onUpdate }) => {
       }
     } catch (err) {
       console.error('Profile save error:', err);
-      setSaveMsg('❌ Failed to save. Please try again.');
+      setSaveMsg('Failed to save. Please try again.');
     } finally {
       setSaving(false);
       setTimeout(() => setSaveMsg(''), 3000);
@@ -84,7 +85,8 @@ const Profile = ({ user, userEmail, onUpdate }) => {
             justifyContent: 'center',
             fontSize: '2.5rem',
             position: 'relative',
-            color: 'white'
+            color: 'white',
+            border: '4px solid var(--glass-border)'
           }}>
             {!formData.avatar && (formData.name ? formData.name[0]?.toUpperCase() : '?')}
             <label style={{ 
@@ -101,9 +103,10 @@ const Profile = ({ user, userEmail, onUpdate }) => {
               fontSize: '1rem',
               cursor: 'pointer',
               border: '2px solid var(--bg)',
-              color: 'black'
+              color: 'black',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.2)'
             }}>
-              📸
+              <Camera size={16} />
               <input 
                 type="file" 
                 accept="image/*" 
@@ -128,7 +131,9 @@ const Profile = ({ user, userEmail, onUpdate }) => {
             </label>
           </div>
           <h2 style={{ marginBottom: '0.25rem' }}>{formData.name || 'User'}</h2>
-          <p style={{ marginBottom: 0 }}>📍 {formData.village}</p>
+          <p style={{ marginBottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', color: 'var(--text-secondary)' }}>
+            <MapPin size={14} /> {formData.village || 'Location not set'}
+          </p>
         </div>
 
         <form onSubmit={handleSave}>
@@ -161,18 +166,38 @@ const Profile = ({ user, userEmail, onUpdate }) => {
           </div>
 
           {saveMsg && (
-            <div style={{ textAlign: 'center', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+            <div style={{ 
+              textAlign: 'center', 
+              marginBottom: '1rem', 
+              padding: '0.75rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              backgroundColor: saveMsg.includes('successfully') ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+              color: saveMsg.includes('successfully') ? 'var(--success)' : 'var(--error)'
+            }}>
+              {saveMsg.includes('successfully') ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
               {saveMsg}
             </div>
           )}
 
-          <button className="btn btn-primary" style={{ width: '100%', marginTop: '1rem', padding: '1rem' }} disabled={saving}>
-            {saving ? '⏳ Saving...' : '💾 Save Changes'}
+          <button className="btn btn-primary" style={{ width: '100%', marginTop: '1rem', padding: '1rem', gap: '0.5rem' }} disabled={saving}>
+            {saving ? (
+              <><Loader2 size={20} className="animate-spin" /> Saving...</>
+            ) : (
+              <><Save size={20} /> Save Changes</>
+            )}
           </button>
         </form>
 
         <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--glass-border)' }}>
-          <h3 style={{ color: '#ef4444', fontSize: '1.1rem', marginBottom: '1rem' }}>Account Danger Zone</h3>
+          <h3 style={{ color: '#ef4444', fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <ShieldAlert size={20} />
+            Account Danger Zone
+          </h3>
           <button className="btn btn-danger" style={{ width: '100%' }}>Deactivate My Account</button>
         </div>
       </div>

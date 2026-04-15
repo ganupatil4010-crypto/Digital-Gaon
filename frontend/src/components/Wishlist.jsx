@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Trash2, ShoppingBag } from 'lucide-react';
 import API_BASE_URL from '../config/api';
 
 const Wishlist = () => {
@@ -62,9 +63,11 @@ const Wishlist = () => {
                    <button className="btn btn-primary" style={{ flex: 1, fontSize: '0.8rem' }}>View Details</button>
                    <button 
                      className="btn btn-danger" 
-                     style={{ padding: '0.5rem', borderRadius: '50%', flex: '0 0 40px' }}
+                     style={{ padding: '0.5rem', borderRadius: '50%', flex: '0 0 40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                      onClick={() => handleRemove(item._id)}
-                   >🗑️</button>
+                   >
+                     <Trash2 size={18} />
+                   </button>
                 </div>
               </div>
             </div>
@@ -72,10 +75,21 @@ const Wishlist = () => {
         </div>
       ) : (
         <div className="auth-card" style={{ textAlign: 'center', padding: '4rem' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🛒</div>
+          <div style={{ 
+            width: '80px', 
+            height: '80px', 
+            borderRadius: '50%', 
+            background: 'rgba(255, 255, 255, 0.05)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            margin: '0 auto 1.5rem'
+          }}>
+            <ShoppingBag size={40} color="var(--primary)" />
+          </div>
           <h3>Your wishlist is empty</h3>
           <p>Explore the market and save items you like!</p>
-          <button className="btn btn-primary">Start Shopping</button>
+          <button className="btn btn-primary" style={{ marginTop: '1.5rem' }}>Start Shopping</button>
         </div>
       )}
     </div>

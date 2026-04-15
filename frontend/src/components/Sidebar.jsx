@@ -1,12 +1,12 @@
 import React from 'react';
+import { Home, Package, Heart, User, PlusCircle } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const menuItems = [
-    { id: 'home', label: 'Home', icon: '🏠' },
-    { id: 'listings', label: 'My Listings', icon: '📦' },
-    { id: 'wishlist', label: 'Wishlist', icon: '❤️' },
-
-    { id: 'profile', label: 'Profile Settings', icon: '👤' },
+    { id: 'home', label: 'Home', icon: <Home size={20} /> },
+    { id: 'listings', label: 'My Listings', icon: <Package size={20} /> },
+    { id: 'wishlist', label: 'Wishlist', icon: <Heart size={20} /> },
+    { id: 'profile', label: 'Profile Settings', icon: <User size={20} /> },
   ];
 
   return (
@@ -20,7 +20,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
             className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
             onClick={() => setActiveTab(item.id)}
           >
-            <span>{item.icon}</span>
+            <span style={{ display: 'flex', alignItems: 'center' }}>{item.icon}</span>
             <span>{item.label}</span>
           </div>
         ))}
@@ -29,7 +29,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
           className={`nav-item highlight ${activeTab === 'add-product' ? 'active' : ''}`}
           onClick={() => setActiveTab('add-product')}
         >
-          <span>➕</span>
+          <PlusCircle size={20} />
           <span>Add Product</span>
         </div>
       </div>

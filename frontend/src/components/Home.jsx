@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Heart, MapPin, Flame, ArrowRight } from 'lucide-react';
 import API_BASE_URL from '../config/api';
 
 const Home = ({ userVillage }) => {
@@ -72,23 +73,26 @@ const Home = ({ userVillage }) => {
             width: '36px',
             height: '36px',
             cursor: 'pointer',
-            fontSize: '1.1rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             transition: 'var(--transition)',
             backdropFilter: 'blur(4px)',
+            color: wishlistIds.includes(product._id) ? '#ef4444' : 'white'
           }}
           title={wishlistIds.includes(product._id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
         >
-          {wishlistIds.includes(product._id) ? '❤️' : '🤍'}
+          <Heart size={20} fill={wishlistIds.includes(product._id) ? "#ef4444" : "none"} />
         </button>
       </div>
       <div className="product-info">
         <div className="product-price">₹{product.price}</div>
         <div className="product-title">{product.title}</div>
         <div className="product-meta">
-          <span>{product.location}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <MapPin size={14} />
+            {product.location}
+          </span>
           <span style={{ color: 'var(--success)', fontWeight: '600' }}>In Stock</span>
         </div>
       </div>
@@ -99,13 +103,18 @@ const Home = ({ userVillage }) => {
     <div className="home-page">
       <div style={{ marginBottom: '2.5rem' }}>
         <h1 className="page-title">Marketplace Overview</h1>
-        <p style={{ margin: 0 }}>📍 Showing active listings near <strong style={{ color: 'var(--primary)' }}>{userVillage || 'your village'}</strong></p>
+        <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <MapPin size={18} color="var(--primary)" /> 
+          Showing active listings near <strong style={{ color: 'var(--primary)' }}>{userVillage || 'your village'}</strong>
+        </p>
       </div>
 
       <div style={{ marginBottom: '3rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.5rem', marginBottom: 0 }}>Nearby Products</h2>
-          <span style={{ fontSize: '0.875rem', color: 'var(--primary)', cursor: 'pointer' }}>View all →</span>
+          <span style={{ fontSize: '0.875rem', color: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            View all <ArrowRight size={16} />
+          </span>
         </div>
         
         {loading ? (
@@ -138,9 +147,22 @@ const Home = ({ userVillage }) => {
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <div>
-          <h3 style={{ color: '#ef4444', marginBottom: '0.5rem' }}>🔥 Urgent Sales</h3>
-          <p style={{ margin: 0, fontSize: '0.875rem' }}>Check out products that need to be sold today at high discounts!</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <div style={{ 
+            width: '60px', 
+            height: '60px', 
+            borderRadius: '50%', 
+            background: 'rgba(239, 68, 68, 0.2)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center' 
+          }}>
+            <Flame size={32} color="#ef4444" />
+          </div>
+          <div>
+            <h3 style={{ color: '#ef4444', marginBottom: '0.5rem' }}>Urgent Sales</h3>
+            <p style={{ margin: 0, fontSize: '0.875rem' }}>Check out products that need to be sold today at high discounts!</p>
+          </div>
         </div>
         <button className="btn" style={{ background: '#ef4444', color: 'white' }}>Check Now</button>
       </div>
