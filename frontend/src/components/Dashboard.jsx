@@ -8,6 +8,7 @@ import AddProduct from './AddProduct';
 import Wishlist from './Wishlist';
 
 import Profile from './Profile';
+import FarmerChatbot from './FarmerChatbot';
 
 const Dashboard = ({ onLogout, userEmail }) => {
   const [activeTab, setActiveTab] = useState('home');
@@ -73,6 +74,7 @@ const Dashboard = ({ onLogout, userEmail }) => {
       </div>
 
       <div className="bg-blobs"></div>
+      <FarmerChatbot />
     </div>
   );
 };
