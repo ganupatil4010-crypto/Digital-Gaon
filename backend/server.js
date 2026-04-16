@@ -17,7 +17,23 @@ const PORT = process.env.PORT || 5000;
 connectDB();
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+    'http://localhost:3000',
+    'https://digital-gaon.vercel.app',
+    /\.vercel\.app$/,
+    /\.netlify\.app$/
+];
+app.use(cors({
+    origin: function(origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.some(o => typeof o === 'string' ? o === origin : o.test(origin))) {
+            return callback(null, true);
+        }
+        return callback(null, true); // Allow all for now — tighten in production if needed
+    },
+    credentials: true
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
