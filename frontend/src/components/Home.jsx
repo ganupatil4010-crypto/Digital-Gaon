@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Heart, MapPin, Flame, ArrowRight } from 'lucide-react';
 import API_BASE_URL from '../config/api';
+import ProductDetailModal from './ProductDetailModal';
 
 const Home = ({ userVillage }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [wishlistIds, setWishlistIds] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const email = localStorage.getItem('userEmail') || 'guest@example.com';
 
@@ -58,11 +60,14 @@ const Home = ({ userVillage }) => {
   const latestListings = products.slice(3, 10); // Show next 7
 
   const renderProductCard = (product) => (
-    <div key={product._id} className="product-card">
+    <div key={product._id} className="product-card" onClick={() => setSelectedProduct(product)} style={{ cursor: 'pointer' }}>
       <div style={{ position: 'relative' }}>
         <img src={product.img} alt={product.title} className="product-img" />
         <button
-          onClick={() => toggleWishlist(product._id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWishlist(product._id);
+          }}
           style={{
             position: 'absolute',
             top: '10px',
@@ -166,6 +171,11 @@ const Home = ({ userVillage }) => {
         </div>
         <button className="btn" style={{ background: '#ef4444', color: 'white' }}>Check Now</button>
       </div>
+
+      <ProductDetailModal 
+        product={selectedProduct} 
+        onClose={() => setSelectedProduct(null)} 
+      />
     </div>
   );
 };

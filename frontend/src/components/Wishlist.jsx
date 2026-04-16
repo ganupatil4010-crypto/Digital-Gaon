@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Trash2, ShoppingBag } from 'lucide-react';
 import API_BASE_URL from '../config/api';
+import ProductDetailModal from './ProductDetailModal';
 
 const Wishlist = () => {
   const [savedItems, setSavedItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const email = localStorage.getItem('userEmail') || 'guest@example.com';
 
@@ -60,7 +62,7 @@ const Wishlist = () => {
                 <div className="product-price">₹{item.price}</div>
                 <div className="product-title">{item.title}</div>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                   <button className="btn btn-primary" style={{ flex: 1, fontSize: '0.8rem' }}>View Details</button>
+                   <button className="btn btn-primary" style={{ flex: 1, fontSize: '0.8rem' }} onClick={() => setSelectedProduct(item)}>View Details</button>
                    <button 
                      className="btn btn-danger" 
                      style={{ padding: '0.5rem', borderRadius: '50%', flex: '0 0 40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -92,6 +94,11 @@ const Wishlist = () => {
           <button className="btn btn-primary" style={{ marginTop: '1.5rem' }}>Start Shopping</button>
         </div>
       )}
+
+      <ProductDetailModal 
+        product={selectedProduct} 
+        onClose={() => setSelectedProduct(null)} 
+      />
     </div>
   );
 };

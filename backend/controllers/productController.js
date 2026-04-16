@@ -39,7 +39,16 @@ exports.addProduct = async (req, res) => {
 // Get all products
 exports.getAllProducts = async (req, res) => {
     try {
-        const products = db.prepare('SELECT * FROM products ORDER BY createdAt DESC').all();
+        const products = db.prepare(`
+            SELECT p.*, 
+                   u.name AS sellerName, 
+                   u.village AS sellerVillage, 
+                   u.phone AS sellerPhone, 
+                   u.avatar AS sellerAvatar
+            FROM products p
+            LEFT JOIN users u ON p.sellerEmail = u.email
+            ORDER BY p.createdAt DESC
+        `).all();
 
         // Map id to _id for frontend compatibility
         const mapped = products.map(p => ({ ...p, _id: p.id }));
@@ -60,7 +69,17 @@ exports.getMyProducts = async (req, res) => {
             return res.status(400).json({ error: 'Email is required' });
         }
 
-        const products = db.prepare('SELECT * FROM products WHERE sellerEmail = ? ORDER BY createdAt DESC').all(email);
+        const products = db.prepare(`
+            SELECT p.*, 
+                   u.name AS sellerName, 
+                   u.village AS sellerVillage, 
+                   u.phone AS sellerPhone, 
+                   u.avatar AS sellerAvatar
+            FROM products p
+            LEFT JOIN users u ON p.sellerEmail = u.email
+            WHERE p.sellerEmail = ? 
+            ORDER BY p.createdAt DESC
+        `).all(email);
 
         const mapped = products.map(p => ({ ...p, _id: p.id }));
 

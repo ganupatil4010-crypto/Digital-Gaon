@@ -61,8 +61,14 @@ exports.getWishlist = async (req, res) => {
         }
 
         const items = db.prepare(`
-            SELECT p.*, p.id as _id FROM wishlist w
+            SELECT p.*, p.id as _id,
+                   u.name AS sellerName, 
+                   u.village AS sellerVillage, 
+                   u.phone AS sellerPhone, 
+                   u.avatar AS sellerAvatar
+            FROM wishlist w
             JOIN products p ON w.productId = p.id
+            LEFT JOIN users u ON p.sellerEmail = u.email
             WHERE w.userEmail = ?
             ORDER BY w.createdAt DESC
         `).all(email);
@@ -95,8 +101,14 @@ exports.addToWishlist = async (req, res) => {
 
         // Return updated wishlist
         const items = db.prepare(`
-            SELECT p.*, p.id as _id FROM wishlist w
+            SELECT p.*, p.id as _id,
+                   u.name AS sellerName, 
+                   u.village AS sellerVillage, 
+                   u.phone AS sellerPhone, 
+                   u.avatar AS sellerAvatar
+            FROM wishlist w
             JOIN products p ON w.productId = p.id
+            LEFT JOIN users u ON p.sellerEmail = u.email
             WHERE w.userEmail = ?
         `).all(email);
 
@@ -121,8 +133,14 @@ exports.removeFromWishlist = async (req, res) => {
 
         // Return updated wishlist
         const items = db.prepare(`
-            SELECT p.*, p.id as _id FROM wishlist w
+            SELECT p.*, p.id as _id,
+                   u.name AS sellerName, 
+                   u.village AS sellerVillage, 
+                   u.phone AS sellerPhone, 
+                   u.avatar AS sellerAvatar
+            FROM wishlist w
             JOIN products p ON w.productId = p.id
+            LEFT JOIN users u ON p.sellerEmail = u.email
             WHERE w.userEmail = ?
         `).all(email);
 
