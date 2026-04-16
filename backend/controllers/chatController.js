@@ -3,7 +3,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const chatController = {
   sendMessage: async (req, res) => {
     try {
-      const { message } = req.body;
+      const { message, image } = req.body;
 
       if (!message) {
         return res.status(400).json({ error: "Message is required" });
@@ -18,7 +18,7 @@ const chatController = {
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-      const prompt = `You are a helpful and intelligent AI assistant for the "Digital Gaon" portal. 
+      const basePrompt = `You are a helpful and intelligent AI assistant for the "Digital Gaon" portal. 
       While your primary audience includes people in rural areas, farmers, and students, you are an "all-rounder" AI.
       You must answer questions on ANY topic, including agriculture, education, technology, general knowledge, science, health, or anything else the user asks.
       You can understand and respond in Hindi (written in Devanagari or English script) or English.
@@ -26,7 +26,18 @@ const chatController = {
       
       User's message: ${message}`;
 
-      const result = await model.generateContent(prompt);
+      let promptContent = [basePrompt];
+
+      if (image && image.data && image.mimeType) {
+        promptContent.push({
+          inlineData: {
+            data: image.data,
+            mimeType: image.mimeType
+          }
+        });
+      }
+
+      const result = await model.generateContent(promptContent);
       const response = await result.response;
       const text = response.text();
 
