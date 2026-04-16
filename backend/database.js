@@ -16,6 +16,7 @@ db.exec(`
     village TEXT DEFAULT '',
     phone TEXT DEFAULT '',
     avatar TEXT DEFAULT '',
+    role TEXT DEFAULT 'user',
     createdAt TEXT DEFAULT (datetime('now')),
     updatedAt TEXT DEFAULT (datetime('now'))
   );
@@ -53,6 +54,28 @@ db.exec(`
 try {
   db.exec("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT ''");
 } catch(e) {}
+
+try {
+  db.exec("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'");
+} catch(e) {}
+
+// Set default admin
+try {
+  const adminEmail = 'tgund5858@gmail.com';
+  
+  // Demote all other admins first (safety measure)
+  db.prepare("UPDATE users SET role = 'user' WHERE email != ?").run(adminEmail);
+  
+  // Promote the specific admin
+  const existing = db.prepare('SELECT * FROM users WHERE email = ?').get(adminEmail);
+  if (existing) {
+    db.prepare("UPDATE users SET role = 'admin' WHERE email = ?").run(adminEmail);
+  } else {
+    db.prepare("INSERT INTO users (email, role) VALUES (?, 'admin')").run(adminEmail);
+  }
+} catch(e) {
+  console.error('Error setting default admin:', e);
+}
 
 console.log('--- SQLITE DATABASE READY ---');
 

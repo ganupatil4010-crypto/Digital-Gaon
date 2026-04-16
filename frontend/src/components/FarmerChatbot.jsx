@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { MessageCircle, X, Send, Bot, User, ImagePlus } from 'lucide-react';
 import API_BASE_URL from '../config/api';
 import '../index.css';
@@ -133,7 +134,11 @@ const FarmerChatbot = () => {
                       <img src={msg.image} alt="User upload" style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '16px', display: 'block', border: '1px solid rgba(255,255,255,0.1)' }} />
                     </div>
                   )}
-                  {msg.text && <div style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</div>}
+                  {msg.text && (
+                    <div className="markdown-content">
+                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

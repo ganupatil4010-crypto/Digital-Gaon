@@ -9,6 +9,7 @@ import Wishlist from './Wishlist';
 
 import Profile from './Profile';
 import FarmerChatbot from './FarmerChatbot';
+import AdminPanel from './AdminPanel';
 
 const Dashboard = ({ onLogout, userEmail }) => {
   const [activeTab, setActiveTab] = useState('home');
@@ -16,6 +17,7 @@ const Dashboard = ({ onLogout, userEmail }) => {
     name: '',
     village: '',
     phone: '',
+    role: 'user',
   });
 
   // Fetch profile from DB on mount
@@ -29,6 +31,7 @@ const Dashboard = ({ onLogout, userEmail }) => {
             name: data.name || email.split('@')[0],
             village: data.village || '',
             phone: data.phone || '',
+            role: data.role || 'user',
           });
         })
         .catch(err => {
@@ -53,7 +56,8 @@ const Dashboard = ({ onLogout, userEmail }) => {
         return <AddProduct />;
       case 'wishlist':
         return <Wishlist />;
-
+      case 'admin':
+        return <AdminPanel />;
       case 'profile':
         return <Profile user={user} userEmail={userEmail} onUpdate={handleProfileUpdate} />;
       default:
@@ -63,7 +67,7 @@ const Dashboard = ({ onLogout, userEmail }) => {
 
   return (
     <div className="dashboard-layout">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userRole={user.role} />
       
       <div className="main-wrapper">
         <Header userName={user.name} onLogout={onLogout} />

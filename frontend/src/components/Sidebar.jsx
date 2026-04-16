@@ -1,13 +1,17 @@
 import React from 'react';
-import { Home, Package, Heart, User, PlusCircle } from 'lucide-react';
+import { Home, Package, Heart, User, PlusCircle, Shield } from 'lucide-react';
 
-const Sidebar = ({ activeTab, setActiveTab }) => {
+const Sidebar = ({ activeTab, setActiveTab, userRole }) => {
   const menuItems = [
     { id: 'home', label: 'Home', icon: <Home size={20} /> },
     { id: 'listings', label: 'My Listings', icon: <Package size={20} /> },
     { id: 'wishlist', label: 'Wishlist', icon: <Heart size={20} /> },
     { id: 'profile', label: 'Profile Settings', icon: <User size={20} /> },
   ];
+
+  if (userRole === 'admin') {
+    menuItems.push({ id: 'admin', label: 'Admin Panel', icon: <Shield size={20} /> });
+  }
 
   return (
     <div className="sidebar">
