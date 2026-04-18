@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+// Stabilization: Restoring deployment integrity
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import OtpVerify from './components/OtpVerify';
