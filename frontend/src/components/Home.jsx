@@ -34,18 +34,8 @@ const Home = ({ userVillage }) => {
       }
     };
 
-    const fetchAds = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/api/ads`);
-        setAds(response.data);
-      } catch (error) {
-        console.error('Error fetching ads:', error);
-      }
-    };
-
     fetchProducts();
     fetchWishlist();
-    fetchAds();
   }, []);
 
   const toggleWishlist = async (productId) => {
@@ -153,48 +143,6 @@ const Home = ({ userVillage }) => {
         )}
       </div>
 
-      {/* Dynamic Ad Section */}
-      {ads.length > 0 && (
-        <div style={{ marginBottom: '3rem' }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Megaphone size={24} color="var(--primary)" /> Sponsored Announcements
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-            {ads.map(ad => (
-              <a 
-                key={ad._id} 
-                href={ad.link || '#'} 
-                target={ad.link ? "_blank" : "_self"}
-                rel="noreferrer"
-                style={{ textDecoration: 'none' }}
-              >
-                <div style={{ 
-                  borderRadius: '24px', 
-                  overflow: 'hidden', 
-                  position: 'relative', 
-                  aspectRatio: '16/9',
-                  border: '1px solid rgba(255,255,255,0.05)',
-                  transition: 'transform 0.3s ease'
-                }} className="ad-hover">
-                  <img src={ad.imageUrl} alt={ad.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{ 
-                    position: 'absolute', 
-                    bottom: 0, 
-                    left: 0, 
-                    right: 0, 
-                    padding: '1.5rem', 
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
-                    color: 'white'
-                  }}>
-                    <span style={{ fontSize: '0.65rem', fontWeight: '800', background: 'var(--primary)', padding: '2px 8px', borderRadius: '4px', marginBottom: '0.5rem', display: 'inline-block' }}>AD</span>
-                    <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{ad.title}</h3>
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="marketplace-banner" style={{ 
         marginTop: '3rem', 
