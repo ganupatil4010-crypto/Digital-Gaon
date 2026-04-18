@@ -86,7 +86,7 @@ exports.getMyProducts = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { email } = req.body;
+        const { email } = req.query;
 
         const product = await Product.findById(id);
 
@@ -95,7 +95,7 @@ exports.deleteProduct = async (req, res) => {
         }
 
         // Only the seller can delete their own product
-        if (product.sellerEmail !== email) {
+        if (product.sellerEmail.toLowerCase() !== email.toLowerCase()) {
             return res.status(403).json({ error: 'You can only delete your own products' });
         }
 

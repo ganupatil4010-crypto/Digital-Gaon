@@ -33,18 +33,26 @@ const MyListings = () => {
     fetchMyProducts();
   }, []);
 
-  const handleDelete = async (productId) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
+  const handleDelete = async (productId) => {
     try {
+      setIsDeleting(true);
       const email = localStorage.getItem('userEmail') || 'guest@example.com';
+      
       await axios.delete(`${API_BASE_URL}/api/products/${productId}`, {
-        data: { email }
+        params: { email }
       });
+      
       setUserProducts(prev => prev.filter(p => p._id !== productId));
+      setConfirmDeleteId(null);
+      alert('Product deleted successfully!');
     } catch (err) {
       console.error('Error deleting product:', err);
-      alert('Failed to delete product');
+      alert(`Failed to delete product: ${err.response?.data?.error || err.message}`);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -142,20 +150,43 @@ const MyListings = () => {
               <div className="product-price">₹{product.price}</div>
               <div className="product-title">{product.title}</div>
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                <button 
-                  className="btn btn-primary" 
-                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-                  onClick={() => handleEditClick(product)}
-                >
-                  <Pencil size={14} /> Edit
-                </button>
-                <button 
-                  className="btn btn-danger" 
-                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-                  onClick={() => handleDelete(product._id)}
-                >
-                  <Trash2 size={14} /> Delete
-                </button>
+                {confirmDeleteId === product._id ? (
+                  <>
+                    <button 
+                      className="btn btn-danger" 
+                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', flex: 1, fontWeight: '700' }}
+                      onClick={() => handleDelete(product._id)}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? '...' : 'Confirm'}
+                    </button>
+                    <button 
+                      className="btn" 
+                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', flex: 1, backgroundColor: 'rgba(255,255,255,0.1)' }}
+                      onClick={() => setConfirmDeleteId(null)}
+                      disabled={isDeleting}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button 
+                      className="btn btn-primary" 
+                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                      onClick={() => handleEditClick(product)}
+                    >
+                      <Pencil size={14} /> Edit
+                    </button>
+                    <button 
+                      className="btn btn-danger" 
+                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                      onClick={() => setConfirmDeleteId(product._id)}
+                    >
+                      <Trash2 size={14} /> Delete
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
