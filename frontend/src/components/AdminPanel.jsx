@@ -14,43 +14,48 @@ const AdminPanel = () => {
     const API_URL = '/api/admin';
 
     const getHeaders = () => ({
-        Authorization: `Bearer ${localStorage.getItem('token')}`
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
     });
-
-    const headers = getHeaders(); // For initial mount fetches
 
     useEffect(() => {
         fetchStats();
     }, []);
 
     const fetchStats = async () => {
+        setLoading(true);
         try {
-            const res = await axios.get(`${API_BASE_URL}${API_URL}/stats`, { headers });
+            const res = await axios.get(`${API_BASE_URL}${API_URL}/stats`, getHeaders());
             setStats(res.data);
         } catch (err) {
             console.error('Error fetching admin stats:', err);
+        } finally {
+            setLoading(false);
         }
     };
 
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`${API_BASE_URL}${API_URL}/users`, { headers });
+            const res = await axios.get(`${API_BASE_URL}${API_URL}/users`, getHeaders());
             setUsers(res.data);
-            setLoading(false);
         } catch (err) {
             console.error('Error fetching users:', err);
+        } finally {
+            setLoading(false);
         }
     };
 
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`${API_BASE_URL}${API_URL}/products`, { headers });
+            const res = await axios.get(`${API_BASE_URL}${API_URL}/products`, getHeaders());
             setProducts(res.data);
-            setLoading(false);
         } catch (err) {
             console.error('Error fetching products:', err);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -62,7 +67,7 @@ const AdminPanel = () => {
     const handleDeleteUser = async (id) => {
         if (!window.confirm('Are you sure you want to delete this user?')) return;
         try {
-            await axios.delete(`${API_BASE_URL}${API_URL}/users/${id}`, { headers });
+            await axios.delete(`${API_BASE_URL}${API_URL}/users/${id}`, getHeaders());
             fetchUsers();
             fetchStats();
         } catch (err) {
@@ -73,7 +78,7 @@ const AdminPanel = () => {
     const handleDeleteProduct = async (id) => {
         if (!window.confirm('Are you sure you want to delete this product?')) return;
         try {
-            await axios.delete(`${API_BASE_URL}${API_URL}/products/${id}`, { headers: getHeaders() });
+            await axios.delete(`${API_BASE_URL}${API_URL}/products/${id}`, getHeaders());
             fetchProducts();
             fetchStats();
         } catch (err) {
@@ -131,7 +136,7 @@ const AdminPanel = () => {
                 </div>
 
                 {/* Tab Pill System */}
-                <div style={{ display: 'flex', marginBottom: '2.5rem' }}>
+                <div style={{ display: 'flex', marginBottom: '2.5rem', maxWidth: '100%' }}>
                     <div className="tabs-wrapper">
                         <button 
                             onClick={() => setActiveTab('stats')}
@@ -159,7 +164,7 @@ const AdminPanel = () => {
 
                 {/* Dashboard Stats */}
                 {activeTab === 'stats' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.5rem' }}>
                         <div className="stat-card">
                             <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1rem' }}>Total Users</span>
                             <span style={{ fontSize: '3.5rem', fontWeight: '700', color: 'white', letterSpacing: '-0.02em', marginBottom: '1rem' }}>{stats.users}</span>
