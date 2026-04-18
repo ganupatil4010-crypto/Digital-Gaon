@@ -34,15 +34,21 @@ exports.getAllProducts = async (req, res) => {
         // Here we can fetch products and manually map seller info if users are in the same DB.
         const products = await Product.find().sort({ createdAt: -1 }).lean();
         
-        // Manual join for seller info (simulating SQL JOIN)
+        // Use a simple in-memory cache for this request to avoid N+1 queries
+        const sellerCache = {};
         const productsWithSellers = await Promise.all(products.map(async (p) => {
-            const user = await User.findOne({ email: p.sellerEmail }).lean();
+            if (!sellerCache[p.sellerEmail]) {
+                const user = await User.findOne({ email: p.sellerEmail }).lean();
+                sellerCache[p.sellerEmail] = {
+                    sellerName: user?.name || 'Unknown',
+                    sellerVillage: user?.village || 'Unknown',
+                    sellerPhone: user?.phone || 'Unknown',
+                    sellerAvatar: user?.avatar || ''
+                };
+            }
             return {
                 ...p,
-                sellerName: user?.name || 'Unknown',
-                sellerVillage: user?.village || 'Unknown',
-                sellerPhone: user?.phone || 'Unknown',
-                sellerAvatar: user?.avatar || ''
+                ...sellerCache[p.sellerEmail]
             };
         }));
 

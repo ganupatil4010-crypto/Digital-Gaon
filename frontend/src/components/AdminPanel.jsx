@@ -27,7 +27,6 @@ const AdminPanel = () => {
         try {
             const res = await axios.get(`${API_BASE_URL}${API_URL}/stats`, { headers });
             setStats(res.data);
-            setLoading(false);
         } catch (err) {
             console.error('Error fetching admin stats:', err);
         }
@@ -228,7 +227,7 @@ const AdminPanel = () => {
                                 </thead>
                                 <tbody>
                                     {activeTab === 'users' && filteredUsers.map(user => (
-                                        <tr key={user.id}>
+                                        <tr key={user._id}>
                                             <td>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                     <img 
@@ -257,14 +256,14 @@ const AdminPanel = () => {
                                                 </span>
                                             </td>
                                             <td style={{ textAlign: 'right' }}>
-                                                <button onClick={() => handleDeleteUser(user.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', opacity: 0.6, cursor: 'pointer' }}>
+                                                <button onClick={() => handleDeleteUser(user._id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', opacity: 0.6, cursor: 'pointer' }}>
                                                     <Trash2 size={20} />
                                                 </button>
                                             </td>
                                         </tr>
                                     ))}
                                     {activeTab === 'products' && filteredProducts.map(product => (
-                                        <tr key={product.id}>
+                                        <tr key={product._id}>
                                             <td>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                     <img src={product.img} className="admin-avatar" alt="" />
@@ -274,7 +273,7 @@ const AdminPanel = () => {
                                             <td style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontStyle: 'italic' }}>{product.sellerEmail}</td>
                                             <td style={{ color: '#10b981', fontWeight: '700' }}>₹{product.price}</td>
                                             <td style={{ textAlign: 'right' }}>
-                                                <button onClick={() => handleDeleteProduct(product.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', opacity: 0.6, cursor: 'pointer' }}>
+                                                <button onClick={() => handleDeleteProduct(product._id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', opacity: 0.6, cursor: 'pointer' }}>
                                                     <Trash2 size={20} />
                                                 </button>
                                             </td>

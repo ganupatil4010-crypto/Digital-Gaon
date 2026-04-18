@@ -59,17 +59,17 @@ const Dashboard = ({ onLogout, userEmail }) => {
   const renderContent = () => {
     switch (activeTab) {
       case 'home':
-        return <Home userVillage={user.village} />;
+        return <Home userVillage={user.village} userEmail={userEmail || localStorage.getItem('userEmail')} />;
       case 'listings':
-        return <MyListings />;
+        return <MyListings userEmail={userEmail || localStorage.getItem('userEmail')} />;
       case 'add-product':
-        return <AddProduct />;
+        return <AddProduct userEmail={userEmail || localStorage.getItem('userEmail')} />;
       case 'wishlist':
-        return <Wishlist />;
+        return <Wishlist userEmail={userEmail || localStorage.getItem('userEmail')} />;
       case 'admin':
         return <AdminPanel />;
       case 'profile':
-        return <Profile user={user} userEmail={userEmail} onUpdate={handleProfileUpdate} />;
+        return <Profile user={user} userEmail={userEmail || localStorage.getItem('userEmail')} onUpdate={handleProfileUpdate} />;
       default:
         return <Home userVillage={user.village} />;
     }

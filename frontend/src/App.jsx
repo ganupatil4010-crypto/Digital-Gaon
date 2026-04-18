@@ -56,6 +56,18 @@ function App() {
             } 
           />
           <Route 
+            path="/login" 
+            element={<Navigate to="/" />} 
+          />
+          <Route 
+            path="/admin" 
+            element={<Navigate to="/dashboard" />} 
+          />
+          <Route 
+            path="/admin-panel" 
+            element={<Navigate to="/dashboard" />} 
+          />
+          <Route 
             path="/dashboard" 
             element={
               isAuthenticated ? (
@@ -65,6 +77,7 @@ function App() {
               )
             } 
           />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
     </Router>

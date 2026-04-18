@@ -14,29 +14,25 @@ const Home = ({ userVillage }) => {
   const email = localStorage.getItem('userEmail') || 'guest@example.com';
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/products`);
-        setProducts(response.data);
+        const [productsRes, wishlistRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/products`),
+          axios.get(`${API_BASE_URL}/api/user/wishlist?email=${encodeURIComponent(email)}`)
+        ]);
+        
+        setProducts(productsRes.data);
+        setWishlistIds(wishlistRes.data.map(item => item._id));
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching dashboard data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    const fetchWishlist = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/api/user/wishlist?email=${encodeURIComponent(email)}`);
-        setWishlistIds(response.data.map(item => item._id));
-      } catch (error) {
-        console.error('Error fetching wishlist:', error);
-      }
-    };
-
-    fetchProducts();
-    fetchWishlist();
-  }, []);
+    fetchData();
+  }, [email]);
 
   const toggleWishlist = async (productId) => {
     const isInWishlist = wishlistIds.includes(productId);
@@ -56,9 +52,14 @@ const Home = ({ userVillage }) => {
     }
   };
 
-  // For demonstration, dividing products arbitrarily since we don't have location logic fully implemented yet
-  const nearbyProducts = products.slice(0, 3);
-  const latestListings = products.slice(3, 10); // Show next 7
+  // Logic to separate "Nearby" (matching village) and "Latest"
+  const nearbyProducts = userVillage 
+    ? products.filter(p => p.location?.toLowerCase().includes(userVillage.toLowerCase())).slice(0, 4)
+    : products.slice(0, 4);
+
+  const latestListings = products
+    .filter(p => !nearbyProducts.find(n => n._id === p._id))
+    .slice(0, 8); 
 
   const renderProductCard = (product) => (
     <div key={product._id} className="product-card" onClick={() => setSelectedProduct(product)} style={{ cursor: 'pointer' }}>

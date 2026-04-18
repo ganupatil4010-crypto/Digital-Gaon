@@ -18,8 +18,38 @@ const ProductDetailModal = ({ product, onClose }) => {
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)',
         border: '1px solid var(--glass-border)',
         animation: 'cardEnter 0.4s ease-out',
-        display: 'flex', flexDirection: 'column'
+        display: 'flex', flexDirection: 'column',
+        position: 'relative' // Added for absolute positioning of child close button
       }}>
+        {/* Close Button - Moved to top level of container with high z-index */}
+        <button 
+          onClick={onClose} 
+          style={{
+            position: 'absolute', 
+            top: '15px', 
+            right: '15px', 
+            background: 'rgba(0,0,0,0.5)', 
+            backdropFilter: 'blur(8px)',
+            border: '1px solid var(--glass-border)', 
+            borderRadius: '50%', 
+            width: '40px', 
+            height: '40px',
+            color: 'white', 
+            cursor: 'pointer', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            zIndex: 100, // Ensure it's above the image and gradient
+            transition: 'var(--transition)',
+            pointerEvents: 'auto'
+          }}
+          onMouseOver={e => e.currentTarget.style.background = 'var(--error)'}
+          onMouseOut={e => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
+          aria-label="Close modal"
+        >
+          <X size={20} />
+        </button>
+
         {/* Image Section */}
         <div style={{ position: 'relative' }}>
           <img src={product.img} alt={product.title} style={{ 
@@ -32,19 +62,6 @@ const ProductDetailModal = ({ product, onClose }) => {
             pointerEvents: 'none'
           }}></div>
           
-          <button onClick={onClose} style={{
-            position: 'absolute', top: '15px', right: '15px', 
-            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
-            border: '1px solid var(--glass-border)', borderRadius: '50%', width: '40px', height: '40px',
-            color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'var(--transition)'
-          }}
-          onMouseOver={e => e.currentTarget.style.background = 'var(--error)'}
-          onMouseOut={e => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
-          >
-            <X size={20} />
-          </button>
-
           {/* Title overlaying image */}
           <div style={{ position: 'absolute', bottom: '20px', left: '25px', right: '25px' }}>
             <div style={{ display: 'inline-flex', padding: '4px 10px', background: 'rgba(139, 92, 246, 0.2)', backdropFilter: 'blur(8px)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '99px', color: '#fff', fontSize: '0.75rem', fontWeight: 'bold', marginBottom: '8px', alignItems: 'center', gap: '4px' }}>
@@ -126,15 +143,24 @@ const ProductDetailModal = ({ product, onClose }) => {
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Mobile Number</div>
                     <div style={{ fontWeight: '600', color: 'var(--text)', fontSize: '1.3rem', letterSpacing: '1px' }}>{product.sellerPhone || 'Not provided'}</div>
                   </div>
-                  {product.sellerPhone && (
+                  <div style={{ display: 'flex', gap: '10px' }}>
                     <button 
-                      className="btn btn-primary" 
-                      style={{ padding: '0.6rem 1.2rem', gap: '8px', background: 'var(--success)' }} 
-                      onClick={() => window.open(`tel:${product.sellerPhone}`)}
+                      className="btn" 
+                      style={{ padding: '0.6rem 1.2rem', background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)' }} 
+                      onClick={onClose}
                     >
-                      <Phone size={16} fill="currentColor" /> Call Seller
+                      Cancel
                     </button>
-                  )}
+                    {product.sellerPhone && (
+                      <button 
+                        className="btn btn-primary" 
+                        style={{ padding: '0.6rem 1.2rem', gap: '8px', background: 'var(--success)' }} 
+                        onClick={() => window.open(`tel:${product.sellerPhone}`)}
+                      >
+                        <Phone size={16} fill="currentColor" /> Call Seller
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
               
