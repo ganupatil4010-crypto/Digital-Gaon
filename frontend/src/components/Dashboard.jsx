@@ -11,6 +11,7 @@ import Wishlist from './Wishlist';
 import Profile from './Profile';
 import FarmerChatbot from './FarmerChatbot';
 import AdminPanel from './AdminPanel';
+import ExpenseTracker from './ExpenseTracker';
 
 const Dashboard = ({ onLogout, userEmail }) => {
   const [activeTab, setActiveTab] = useState('home');
@@ -74,6 +75,8 @@ const Dashboard = ({ onLogout, userEmail }) => {
         return <AdminPanel />;
       case 'profile':
         return <Profile user={user} userEmail={userEmail || localStorage.getItem('userEmail')} onUpdate={handleProfileUpdate} />;
+      case 'khata':
+        return <ExpenseTracker userEmail={userEmail || localStorage.getItem('userEmail')} />;
       default:
         return <Home userVillage={user.village} />;
     }

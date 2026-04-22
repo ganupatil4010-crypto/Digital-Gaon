@@ -4,12 +4,14 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const Product = require('./models/Product');
 const User = require('./models/User'); // If needed for cleanup
+const Expense = require('./models/Expense');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const adRoutes = require('./routes/adRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -57,7 +59,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/ads', adRoutes); // Keep this for public GET /active, but adminRoutes will handle the rest via nesting
+app.use('/api/ads', adRoutes);
+app.use('/api/expenses', expenseRoutes);
 
 // Senior Diagnostics: Global Error Handler
 app.use((err, req, res, next) => {
@@ -98,6 +101,16 @@ async function startCleanupJob() {
                 console.log(`Cleaned up ${result.deletedCount} expired products (older than 7 days).`);
             } else {
                 console.log('No expired products to clean up.');
+            }
+            
+            // Delete Khata expenses older than 30 days
+            const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            const expenseResult = await Expense.deleteMany({
+                createdAt: { $lt: thirtyDaysAgo }
+            });
+            
+            if (expenseResult.deletedCount > 0) {
+                console.log(`Cleaned up ${expenseResult.deletedCount} old khata entries (older than 30 days).`);
             }
         } catch (error) {
             console.error('Cleanup Job Error:', error);
