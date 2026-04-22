@@ -87,15 +87,15 @@ async function startCleanupJob() {
         try {
             console.log('--- RUNNING CLEANUP JOB (MongoDB) ---');
             
-            const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
             
-            // Delete products older than 24 hours
+            // Delete products older than 7 days
             const result = await Product.deleteMany({
-                createdAt: { $lt: twentyFourHoursAgo }
+                createdAt: { $lt: sevenDaysAgo }
             });
             
             if (result.deletedCount > 0) {
-                console.log(`Cleaned up ${result.deletedCount} expired products.`);
+                console.log(`Cleaned up ${result.deletedCount} expired products (older than 7 days).`);
             } else {
                 console.log('No expired products to clean up.');
             }

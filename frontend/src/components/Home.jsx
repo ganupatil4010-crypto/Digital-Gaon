@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Heart, MapPin, Flame, ArrowRight, Tractor, Wheat, Smartphone, Car, Sofa, Grid, PackageSearch, Search, X } from 'lucide-react';
+import { Heart, MapPin, Flame, ArrowRight, Tractor, Wheat, Smartphone, Car, Sofa, Grid, PackageSearch, Search, X, Repeat } from 'lucide-react';
 import API_BASE_URL from '../config/api';
 import ProductDetailModal from './ProductDetailModal';
 
 const CATEGORIES = [
   { label: 'All', value: 'all', icon: Grid },
+  { label: 'Gaon Rental Hub', value: 'Gaon Rental Hub', icon: Repeat },
   { label: 'Farming Equipment', value: 'Farming Equipment', icon: Tractor },
   { label: 'Crops / Seeds', value: 'Crops / Seeds', icon: Wheat },
   { label: 'Electronics', value: 'Electronics', icon: Smartphone },
@@ -14,7 +15,7 @@ const CATEGORIES = [
   { label: 'Other', value: 'Other', icon: PackageSearch },
 ];
 
-const Home = ({ userVillage }) => {
+const Home = ({ userVillage, setActiveTab }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ads, setAds] = useState([]);

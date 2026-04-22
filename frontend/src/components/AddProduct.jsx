@@ -25,14 +25,48 @@ const AddProduct = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        setMessage('Image size should be less than 2MB');
+      // Allow up to 10MB now, because we will compress it anyway
+      if (file.size > 10 * 1024 * 1024) {
+        setMessage('Image size should be less than 10MB');
         return;
       }
+
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result);
-        setFormData({ ...formData, img: reader.result });
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          // Create canvas for compression
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Max dimensions
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to base64 with quality 0.7
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          setPreview(compressedBase64);
+          setFormData({ ...formData, img: compressedBase64 });
+        };
+        img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     }
@@ -42,7 +76,9 @@ const AddProduct = () => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file) {
-      handleFileChange({ target: { files: [file] } });
+      // Trigger the same compression logic
+      const fakeEvent = { target: { files: [file] } };
+      handleFileChange(fakeEvent);
     }
   };
 
@@ -118,6 +154,7 @@ const AddProduct = () => {
                   required
                 >
                   <option value="">Select Category</option>
+                  <option value="Gaon Rental Hub">Gaon Rental Hub (Rent Tractor, Tools, etc.)</option>
                   <option value="Farming Equipment">Farming Equipment</option>
                   <option value="Crops / Seeds">Crops / Seeds</option>
                   <option value="Electronics">Electronics</option>
@@ -208,7 +245,7 @@ const AddProduct = () => {
                     <Camera size={24} color="var(--primary)" />
                   </div>
                   <div style={{ fontWeight: '500' }}>Click to Upload or Drag & Drop</div>
-                  <p style={{ fontSize: '0.75rem', marginBottom: 0 }}>Supported: JPG, PNG, WEBP (Max 2MB)</p>
+                  <p style={{ fontSize: '0.75rem', marginBottom: 0 }}>Supported: JPG, PNG, WEBP (Max 10MB)</p>
                 </>
               )}
             </div>

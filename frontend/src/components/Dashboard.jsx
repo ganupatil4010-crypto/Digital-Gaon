@@ -59,7 +59,11 @@ const Dashboard = ({ onLogout, userEmail }) => {
   const renderContent = () => {
     switch (activeTab) {
       case 'home':
-        return <Home userVillage={user.village} userEmail={userEmail || localStorage.getItem('userEmail')} />;
+        return <Home 
+          userVillage={user.village} 
+          userEmail={userEmail || localStorage.getItem('userEmail')} 
+          setActiveTab={setActiveTab} 
+        />;
       case 'listings':
         return <MyListings userEmail={userEmail || localStorage.getItem('userEmail')} />;
       case 'add-product':
