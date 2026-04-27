@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Package, Heart, User, PlusCircle, Shield, X, BookOpen, TrendingUp } from 'lucide-react';
+import { Home, Package, Heart, User, PlusCircle, Shield, X, BookOpen, TrendingUp, Store, Milk, Stethoscope, Car } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab, userRole, isOpen, onClose }) => {
   const menuItems = [
@@ -8,11 +8,16 @@ const Sidebar = ({ activeTab, setActiveTab, userRole, isOpen, onClose }) => {
     { id: 'wishlist', label: 'Wishlist', icon: <Heart size={20} /> },
     { id: 'profile', label: 'Profile Settings', icon: <User size={20} /> },
     { id: 'khata', label: 'Digital Khata', icon: <BookOpen size={20} /> },
+    { id: 'vyapar', label: 'Vyapar Saathi', icon: <Store size={20} /> },
     { id: 'study', label: 'Study Streak', icon: <TrendingUp size={20} /> },
+    { id: 'dairy', label: 'Dairy Saathi', icon: <Milk size={20} /> },
+    { id: 'pashu', label: 'Pashu Saathi', icon: <Stethoscope size={20} /> },
+    { id: 'yatra', label: 'Yatra Saathi', icon: <Car size={20} /> },
   ];
 
-  if (userRole === 'admin') {
-    menuItems.push({ id: 'admin', label: 'Admin Panel', icon: <Shield size={20} /> });
+  // Add Admin Panel to the top if user is admin
+  if (userRole && userRole.toLowerCase() === 'admin') {
+    menuItems.unshift({ id: 'admin', label: 'Admin Panel', icon: <Shield size={20} /> });
   }
 
   return (

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Users, ShoppingBag, Trash2, Shield, BarChart3, Search, Megaphone, Plus, ExternalLink, Power, Camera } from 'lucide-react';
+import { Users, ShoppingBag, Trash2, Shield, BarChart3, Search, Megaphone, Plus, ExternalLink, Power, Camera, Store, Milk, CheckCircle2, XCircle, Stethoscope, Car } from 'lucide-react';
 import API_BASE_URL from '../config/api';
 
 const AdminPanel = () => {
@@ -12,6 +12,8 @@ const AdminPanel = () => {
     const [ads, setAds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [pendingRequests, setPendingRequests] = useState({ vyapar: [], dairy: [], pashu: [], yatra: [] });
+    const [approvedUsers, setApprovedUsers] = useState({ vyapar: [], dairy: [], pashu: [], yatra: [] });
     const [newAd, setNewAd] = useState({ title: '', imageUrl: '', redirectUrl: '', placement: 'grid' });
     const [isAddingAd, setIsAddingAd] = useState(false);
 
@@ -25,6 +27,8 @@ const AdminPanel = () => {
 
     useEffect(() => {
         fetchStats();
+        fetchPendingRequests();
+        fetchApprovedUsers();
     }, []);
 
     const fetchStats = async () => {
@@ -37,6 +41,38 @@ const AdminPanel = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchPendingRequests = async () => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/api/access/pending`);
+            setPendingRequests({
+                vyapar: res.data.vyapar || [],
+                dairy: res.data.dairy || [],
+                pashu: res.data.pashu || [],
+                yatra: res.data.yatra || []
+            });
+        } catch (err) { console.error('Error fetching access requests:', err); }
+    };
+
+    const handleAccessAction = async (userId, feature, action) => {
+        try {
+            await axios.put(`${API_BASE_URL}/api/access/manage`, { userId, feature, action });
+            fetchPendingRequests();
+            fetchApprovedUsers();
+        } catch { alert('Action failed.'); }
+    };
+
+    const fetchApprovedUsers = async () => {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/api/access/approved`);
+            setApprovedUsers({
+                vyapar: res.data.vyapar || [],
+                dairy: res.data.dairy || [],
+                pashu: res.data.pashu || [],
+                yatra: res.data.yatra || []
+            });
+        } catch (err) { console.error('Error fetching approved users:', err); }
     };
 
     const fetchUsers = async () => {
@@ -80,6 +116,10 @@ const AdminPanel = () => {
         if (activeTab === 'users') fetchUsers();
         if (activeTab === 'products') fetchProducts();
         if (activeTab === 'ads') fetchAds();
+        if (activeTab === 'vyapar-requests' || activeTab === 'dairy-requests' || activeTab === 'pashu-requests' || activeTab === 'yatra-requests') {
+            fetchPendingRequests();
+            fetchApprovedUsers();
+        }
     }, [activeTab]);
 
     const handleDeleteUser = async (id) => {
@@ -243,6 +283,58 @@ const AdminPanel = () => {
                         >
                             <Megaphone size={18} /> 
                             <span>Ads</span>
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('vyapar-requests')}
+                            className={`tab-btn ${activeTab === 'vyapar-requests' ? 'active' : ''}`}
+                            style={{ position: 'relative' }}
+                        >
+                            <Store size={18} /> 
+                            <span>Vyapar Req.</span>
+                            {pendingRequests.vyapar?.length > 0 && (
+                                <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef4444', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.65rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {pendingRequests.vyapar.length}
+                                </span>
+                            )}
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('dairy-requests')}
+                            className={`tab-btn ${activeTab === 'dairy-requests' ? 'active' : ''}`}
+                            style={{ position: 'relative' }}
+                        >
+                            <Milk size={18} /> 
+                            <span>Dairy Req.</span>
+                            {pendingRequests.dairy?.length > 0 && (
+                                <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef4444', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.65rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {pendingRequests.dairy.length}
+                                </span>
+                            )}
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('pashu-requests')}
+                            className={`tab-btn ${activeTab === 'pashu-requests' ? 'active' : ''}`}
+                            style={{ position: 'relative' }}
+                        >
+                            <Stethoscope size={18} /> 
+                            <span>Pashu Req.</span>
+                            {pendingRequests.pashu?.length > 0 && (
+                                <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef4444', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.65rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {pendingRequests.pashu.length}
+                                </span>
+                            )}
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('yatra-requests')}
+                            className={`tab-btn ${activeTab === 'yatra-requests' ? 'active' : ''}`}
+                            style={{ position: 'relative' }}
+                        >
+                            <Car size={18} /> 
+                            <span>Yatra Req.</span>
+                            {pendingRequests.yatra?.length > 0 && (
+                                <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef4444', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.65rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {pendingRequests.yatra.length}
+                                </span>
+                            )}
                         </button>
                     </div>
                 </div>
@@ -537,6 +629,268 @@ const AdminPanel = () => {
                                 </div>
                             ))}
                         </div>
+                    </div>
+                )}
+                {/* Vyapar Requests */}
+                {activeTab === 'vyapar-requests' && (
+                    <div className="animate-fadeIn">
+                        <h3 style={{ color: '#fff', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Store size={20} color="#8b5cf6" /> Vyapar Saathi — Access Requests
+                        </h3>
+
+                        {/* Pending */}
+                        {pendingRequests.vyapar?.length > 0 && (
+                            <div style={{ marginBottom: '2rem' }}>
+                                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>⏳ Pending Requests ({pendingRequests.vyapar.length})</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    {pendingRequests.vyapar.map(u => (
+                                        <div key={u._id} style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                            <div>
+                                                <div style={{ color: '#fff', fontWeight: '700' }}>{u.name || 'User'}</div>
+                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>{u.email}</div>
+                                                {u.village && <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem' }}>📍 {u.village}</div>}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.6rem' }}>
+                                                <button onClick={() => handleAccessAction(u._id, 'vyapar', 'approve')} style={{ background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff', border: 'none', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    <CheckCircle2 size={15} /> Approve
+                                                </button>
+                                                <button onClick={() => handleAccessAction(u._id, 'vyapar', 'reject')} style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    <XCircle size={15} /> Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {pendingRequests.vyapar?.length === 0 && (
+                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem', marginBottom: '2rem' }}>
+                                ✅ Koi pending request nahi hai
+                            </div>
+                        )}
+
+                        {/* Approved Users */}
+                        <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>✅ Approved Users ({approvedUsers.vyapar?.length || 0})</div>
+                        {approvedUsers.vyapar?.length === 0 ? (
+                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem' }}>
+                                Abhi kisi ko Vyapar Saathi access approved nahi hua.
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {approvedUsers.vyapar.map(u => (
+                                    <div key={u._id} style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#34d399', flexShrink: 0 }} />
+                                            <div>
+                                                <div style={{ color: '#fff', fontWeight: '700' }}>{u.name || 'User'}</div>
+                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>{u.email}</div>
+                                                {u.village && <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem' }}>📍 {u.village}</div>}
+                                            </div>
+                                        </div>
+                                        <button onClick={() => { if(window.confirm(`${u.name || u.email} ka Vyapar Saathi access disable karna chahte ho?`)) handleAccessAction(u._id, 'vyapar', 'reject'); }} style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <XCircle size={15} /> Disable
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Dairy Requests */}
+                {activeTab === 'dairy-requests' && (
+                    <div className="animate-fadeIn">
+                        <h3 style={{ color: '#fff', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Milk size={20} color="#10b981" /> Dairy Saathi — Access Requests
+                        </h3>
+
+                        {/* Pending */}
+                        {pendingRequests.dairy?.length > 0 && (
+                            <div style={{ marginBottom: '2rem' }}>
+                                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>⏳ Pending Requests ({pendingRequests.dairy.length})</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    {pendingRequests.dairy.map(u => (
+                                        <div key={u._id} style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                            <div>
+                                                <div style={{ color: '#fff', fontWeight: '700' }}>{u.name || 'User'}</div>
+                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>{u.email}</div>
+                                                {u.village && <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem' }}>📍 {u.village}</div>}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.6rem' }}>
+                                                <button onClick={() => handleAccessAction(u._id, 'dairy', 'approve')} style={{ background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff', border: 'none', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    <CheckCircle2 size={15} /> Approve
+                                                </button>
+                                                <button onClick={() => handleAccessAction(u._id, 'dairy', 'reject')} style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    <XCircle size={15} /> Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {pendingRequests.dairy?.length === 0 && (
+                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem', marginBottom: '2rem' }}>
+                                ✅ Koi pending request nahi hai
+                            </div>
+                        )}
+
+                        {/* Approved Users */}
+                        <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>✅ Approved Users ({approvedUsers.dairy?.length || 0})</div>
+                        {approvedUsers.dairy?.length === 0 ? (
+                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem' }}>
+                                Abhi kisi ko Dairy Saathi access approved nahi hua.
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {approvedUsers.dairy.map(u => (
+                                    <div key={u._id} style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#34d399', flexShrink: 0 }} />
+                                            <div>
+                                                <div style={{ color: '#fff', fontWeight: '700' }}>{u.name || 'User'}</div>
+                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>{u.email}</div>
+                                                {u.village && <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem' }}>📍 {u.village}</div>}
+                                            </div>
+                                        </div>
+                                        <button onClick={() => { if(window.confirm(`${u.name || u.email} ka Dairy Saathi access disable karna chahte ho?`)) handleAccessAction(u._id, 'dairy', 'reject'); }} style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <XCircle size={15} /> Disable
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+                {/* Pashu Requests */}
+                {activeTab === 'pashu-requests' && (
+                    <div className="animate-fadeIn">
+                        <h3 style={{ color: '#fff', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Stethoscope size={20} color="#10b981" /> Pashu Saathi — Access Requests
+                        </h3>
+
+                        {/* Pending */}
+                        {pendingRequests.pashu?.length > 0 && (
+                            <div style={{ marginBottom: '2rem' }}>
+                                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>⏳ Pending Requests ({pendingRequests.pashu.length})</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    {pendingRequests.pashu.map(u => (
+                                        <div key={u._id} style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                            <div>
+                                                <div style={{ color: '#fff', fontWeight: '700' }}>{u.name || 'User'}</div>
+                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>{u.email}</div>
+                                                {u.village && <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem' }}>📍 {u.village}</div>}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.6rem' }}>
+                                                <button onClick={() => handleAccessAction(u._id, 'pashu', 'approve')} style={{ background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff', border: 'none', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    <CheckCircle2 size={15} /> Approve
+                                                </button>
+                                                <button onClick={() => handleAccessAction(u._id, 'pashu', 'reject')} style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    <XCircle size={15} /> Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {pendingRequests.pashu?.length === 0 && (
+                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem', marginBottom: '2rem' }}>
+                                ✅ Koi pending request nahi hai
+                            </div>
+                        )}
+
+                        {/* Approved Users */}
+                        <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>✅ Approved Users ({approvedUsers.pashu?.length || 0})</div>
+                        {approvedUsers.pashu?.length === 0 ? (
+                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem' }}>
+                                Abhi kisi ko Pashu Saathi access approved nahi hua.
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {approvedUsers.pashu.map(u => (
+                                    <div key={u._id} style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#34d399', flexShrink: 0 }} />
+                                            <div>
+                                                <div style={{ color: '#fff', fontWeight: '700' }}>{u.name || 'User'}</div>
+                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>{u.email}</div>
+                                                {u.village && <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem' }}>📍 {u.village}</div>}
+                                            </div>
+                                        </div>
+                                        <button onClick={() => { if(window.confirm(`${u.name || u.email} ka Pashu Saathi access disable karna chahte ho?`)) handleAccessAction(u._id, 'pashu', 'reject'); }} style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <XCircle size={15} /> Disable
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Yatra Requests */}
+                {activeTab === 'yatra-requests' && (
+                    <div className="animate-fadeIn">
+                        <h3 style={{ color: '#fff', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Car size={20} color="#f59e0b" /> Yatra Saathi — Access Requests
+                        </h3>
+
+                        {/* Pending */}
+                        {pendingRequests.yatra?.length > 0 && (
+                            <div style={{ marginBottom: '2rem' }}>
+                                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>⏳ Pending Requests ({pendingRequests.yatra.length})</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    {(pendingRequests.yatra || []).map(u => (
+                                        <div key={u._id} style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                            <div>
+                                                <div style={{ color: '#fff', fontWeight: '700' }}>{u.name || 'User'}</div>
+                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>{u.email}</div>
+                                                {u.village && <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem' }}>📍 {u.village}</div>}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.6rem' }}>
+                                                <button onClick={() => handleAccessAction(u._id, 'yatra', 'approve')} style={{ background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff', border: 'none', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    <CheckCircle2 size={15} /> Approve
+                                                </button>
+                                                <button onClick={() => handleAccessAction(u._id, 'yatra', 'reject')} style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    <XCircle size={15} /> Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {pendingRequests.yatra?.length === 0 && (
+                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem', marginBottom: '2rem' }}>
+                                ✅ Koi pending request nahi hai
+                            </div>
+                        )}
+
+                        {/* Approved Users */}
+                        <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>✅ Approved Users ({approvedUsers.yatra?.length || 0})</div>
+                        {approvedUsers.yatra?.length === 0 ? (
+                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem' }}>
+                                Abhi kisi ko Yatra Saathi access approved nahi hua.
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                { (approvedUsers.yatra || []).map(u => (
+                                    <div key={u._id} style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#34d399', flexShrink: 0 }} />
+                                            <div>
+                                                <div style={{ color: '#fff', fontWeight: '700' }}>{u.name || 'User'}</div>
+                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>{u.email}</div>
+                                                {u.village && <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem' }}>📍 {u.village}</div>}
+                                            </div>
+                                        </div>
+                                        <button onClick={() => { if(window.confirm(`${u.name || u.email} ka Yatra Saathi access disable karna chahte ho?`)) handleAccessAction(u._id, 'yatra', 'reject'); }} style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <XCircle size={15} /> Disable
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

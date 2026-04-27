@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { Wallet, Plus, Trash2, TrendingUp, TrendingDown, Calendar, ArrowRightLeft, Droplets, CheckCircle2, Download } from 'lucide-react';
 import API_BASE_URL from '../config/api';
 
@@ -57,27 +57,81 @@ const ExpenseTracker = ({ userEmail }) => {
     }
   };
 
-  const handleDownloadImage = async () => {
-    const element = document.getElementById('history-list-container');
-    if (!element) return;
-    
-    // Temporarily add a background color if it's transparent for better image quality
-    const originalBg = element.style.backgroundColor;
-    element.style.backgroundColor = '#1e293b'; // Slate 800 background
-    
-    try {
-      const canvas = await html2canvas(element, { scale: 2 });
-      const dataUrl = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.download = `digital-khata-history-${new Date().toISOString().split('T')[0]}.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch (err) {
-      console.error('Error capturing image:', err);
-      alert('Failed to download image.');
-    } finally {
-      element.style.backgroundColor = originalBg; // Restore background
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    const today = new Date().toLocaleDateString('en-IN');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const filteredData = entries.filter(e => historyTab === 'milk' ? e.category === 'Dairy' : e.category !== 'Dairy');
+    const reportTitle = historyTab === 'milk' ? 'Milk Log Report' : 'General Expenses Report';
+
+    // Header bg
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, pageWidth, 44, 'F');
+    doc.setFontSize(20);
+    doc.setTextColor(139, 92, 246);
+    doc.text('Digital Khata', 14, 16);
+    doc.setFontSize(11);
+    doc.setTextColor(156, 163, 175);
+    doc.text(reportTitle, 14, 25);
+    doc.text(`Generated: ${today}`, pageWidth - 14, 25, { align: 'right' });
+
+    // Summary
+    doc.setFontSize(10);
+    doc.setTextColor(52, 211, 153);
+    doc.text(`Total Income: Rs.${totalIncome.toLocaleString()}`, 14, 36);
+    doc.setTextColor(248, 113, 113);
+    doc.text(`Total Expense: Rs.${totalExpense.toLocaleString()}`, 80, 36);
+    doc.setTextColor(96, 165, 250);
+    doc.text(`Balance: Rs.${balance.toLocaleString()}`, 160, 36);
+
+    // Table Header
+    let y = 52;
+    doc.setFillColor(30, 41, 59);
+    doc.rect(10, y - 6, pageWidth - 20, 10, 'F');
+    doc.setFontSize(10);
+    doc.setTextColor(167, 139, 250);
+    doc.text('#', 14, y);
+    doc.text('Description', 24, y);
+    doc.text('Type', 120, y);
+    doc.text('Amount (Rs.)', 145, y);
+    doc.text('Date', 185, y);
+
+    // Table Rows
+    y += 8;
+    filteredData.forEach((entry, i) => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.setFillColor(...(i % 2 === 0 ? [17, 24, 39] : [22, 33, 55]));
+      doc.rect(10, y - 5, pageWidth - 20, 9, 'F');
+      doc.setFontSize(9);
+      doc.setTextColor(249, 250, 251);
+      doc.text(String(i + 1), 14, y);
+      const titleText = entry.title.length > 38 ? entry.title.substring(0, 38) + '...' : entry.title;
+      doc.text(titleText, 24, y);
+      if (entry.type === 'income') { doc.setTextColor(52, 211, 153); } else { doc.setTextColor(248, 113, 113); }
+      doc.text(entry.type === 'income' ? 'Income' : 'Expense', 120, y);
+      doc.text(`${entry.type === 'income' ? '+' : '-'} Rs.${entry.amount.toLocaleString()}`, 145, y);
+      doc.setTextColor(156, 163, 175);
+      doc.text(new Date(entry.date).toLocaleDateString('en-IN'), 185, y);
+      y += 9;
+    });
+
+    if (filteredData.length === 0) {
+      doc.setTextColor(100, 116, 139);
+      doc.setFontSize(11);
+      doc.text('No records found.', pageWidth / 2, y + 10, { align: 'center' });
     }
+
+    // Footer
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text('Digital Gaon — Digital Khata', 14, 290);
+      doc.text(`Page ${p} of ${totalPages}`, pageWidth - 14, 290, { align: 'right' });
+    }
+
+    doc.save(`digital-khata-${historyTab}-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const totalIncome = entries.filter(e => e.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
@@ -189,8 +243,8 @@ const ExpenseTracker = ({ userEmail }) => {
                 <button onClick={() => setHistoryTab('general')} className={historyTab === 'general' ? 'active' : ''}>Other</button>
               </div>
               <button 
-                onClick={handleDownloadImage}
-                title="Download as Image"
+                onClick={handleDownloadPDF}
+                title="Download as PDF"
                 style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '6px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <Download size={18} />

@@ -12,7 +12,12 @@ import Profile from './Profile';
 import FarmerChatbot from './FarmerChatbot';
 import AdminPanel from './AdminPanel';
 import ExpenseTracker from './ExpenseTracker';
+import VyaparSaathi from './VyaparSaathi';
 import StudyStreak from './StudyStreak';
+import DairySaathi from './DairySaathi';
+import PashuSaathi from './PashuSaathi';
+import YatraSaathi from './YatraSaathi';
+import FeatureLock from './FeatureLock';
 
 const Dashboard = ({ onLogout, userEmail }) => {
   const [activeTab, setActiveTab] = useState('home');
@@ -37,6 +42,8 @@ const Dashboard = ({ onLogout, userEmail }) => {
             phone: data.phone || '',
             role: data.role || 'user',
           });
+          localStorage.setItem('userRole', data.role || 'user');
+          console.log('User Role Fetched:', data.role);
         })
         .catch(err => {
           console.log('Could not fetch profile:', err.message);
@@ -78,8 +85,32 @@ const Dashboard = ({ onLogout, userEmail }) => {
         return <Profile user={user} userEmail={userEmail || localStorage.getItem('userEmail')} onUpdate={handleProfileUpdate} />;
       case 'khata':
         return <ExpenseTracker userEmail={userEmail || localStorage.getItem('userEmail')} />;
+      case 'vyapar':
+        return (
+          <FeatureLock feature="vyapar" userEmail={userEmail || localStorage.getItem('userEmail')}>
+            <VyaparSaathi userEmail={userEmail || localStorage.getItem('userEmail')} />
+          </FeatureLock>
+        );
       case 'study':
         return <StudyStreak userEmail={userEmail || localStorage.getItem('userEmail')} />;
+      case 'dairy':
+        return (
+          <FeatureLock feature="dairy" userEmail={userEmail || localStorage.getItem('userEmail')}>
+            <DairySaathi userEmail={userEmail || localStorage.getItem('userEmail')} />
+          </FeatureLock>
+        );
+        case 'pashu':
+          return (
+            <FeatureLock feature="pashu" userEmail={userEmail || localStorage.getItem('userEmail')}>
+              <PashuSaathi userEmail={userEmail || localStorage.getItem('userEmail')} />
+            </FeatureLock>
+          );
+        case 'yatra':
+          return (
+            <FeatureLock feature="yatra" userEmail={userEmail || localStorage.getItem('userEmail')}>
+              <YatraSaathi userEmail={userEmail || localStorage.getItem('userEmail')} />
+            </FeatureLock>
+          );
       default:
         return <Home userVillage={user.village} />;
     }

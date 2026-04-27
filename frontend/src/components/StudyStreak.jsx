@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import API_BASE_URL from '../config/api';
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -62,7 +62,6 @@ const StudyStreak = ({ userEmail }) => {
   const [calMonth,  setCalMonth]  = useState(new Date().getMonth());
   const [calYear,   setCalYear]   = useState(new Date().getFullYear());
   const [downloading, setDownloading] = useState(false);
-  const reportRef = useRef(null);
   const email = userEmail || localStorage.getItem('userEmail');
 
   const fetchEntries = useCallback(async()=>{
@@ -94,22 +93,125 @@ const StudyStreak = ({ userEmail }) => {
     finally{ setSubmitting(false); }
   };
 
-  // ── Monthly Report Download ──
-  const handleDownload = async () => {
-    if (!reportRef.current) return;
+  // ── Monthly Report Download (PDF) ──
+  const handleDownload = () => {
     setDownloading(true);
     try {
-      const el = reportRef.current;
-      el.style.display = 'block';
-      await new Promise(r => setTimeout(r, 100));
-      const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#0f172a', useCORS: true });
-      el.style.display = 'none';
-      const link = document.createElement('a');
-      link.download = `study-report-${MONTHS[calMonth]}-${calYear}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    } catch (e) { console.error(e); }
-    finally { setDownloading(false); }
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const today = new Date().toLocaleDateString('en-IN');
+      const monthName = MONTHS[calMonth];
+
+      // Compute month stats
+      let completed = 0, partial = 0, missed = 0;
+      for (let i = 1; i <= daysInMonth; i++) {
+        const s = getDayStatus(i);
+        if (s === 'completed') completed++;
+        else if (s === 'partial') partial++;
+        else if (s === 'missed') missed++;
+      }
+
+      // Header
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, pageWidth, 48, 'F');
+      doc.setFontSize(22);
+      doc.setTextColor(139, 92, 246);
+      doc.text('Study Streak', 14, 17);
+      doc.setFontSize(12);
+      doc.setTextColor(156, 163, 175);
+      doc.text(`Monthly Report — ${monthName} ${calYear}`, 14, 27);
+      doc.text(`Generated: ${today}`, pageWidth - 14, 27, { align: 'right' });
+
+      // Stats bar
+      doc.setFontSize(11);
+      doc.setTextColor(52, 211, 153);
+      doc.text(`Completed: ${completed}`, 14, 40);
+      doc.setTextColor(251, 191, 36);
+      doc.text(`Partial: ${partial}`, 70, 40);
+      doc.setTextColor(248, 113, 113);
+      doc.text(`Missed: ${missed}`, 110, 40);
+      doc.setTextColor(251, 146, 60);
+      doc.text(`Current Streak: ${current} days`, 148, 40);
+
+      // Table Header
+      let y = 58;
+      doc.setFillColor(30, 41, 59);
+      doc.rect(10, y - 6, pageWidth - 20, 10, 'F');
+      doc.setFontSize(10);
+      doc.setTextColor(167, 139, 250);
+      doc.text('Date', 14, y);
+      doc.text('Day', 55, y);
+      doc.text('Topic Studied', 80, y);
+      doc.text('Duration', 155, y);
+      doc.text('Status', 182, y);
+
+      // Rows for each day in month
+      y += 8;
+      for (let i = 1; i <= daysInMonth; i++) {
+        if (y > 272) { doc.addPage(); y = 20; }
+        const d = new Date(calYear, calMonth, i);
+        const key = dateKey(d);
+        const entry = entryMap[key];
+        const status = getDayStatus(i);
+        const dayName = DAYS[d.getDay()];
+
+        doc.setFillColor(...(i % 2 === 0 ? [17, 24, 39] : [22, 33, 55]));
+        doc.rect(10, y - 5, pageWidth - 20, 9, 'F');
+        doc.setFontSize(8.5);
+        doc.setTextColor(249, 250, 251);
+        doc.text(`${String(i).padStart(2,'0')} ${monthName.substring(0,3)}`, 14, y);
+        doc.setTextColor(156, 163, 175);
+        doc.text(dayName, 55, y);
+        doc.setTextColor(249, 250, 251);
+        if (entry) {
+          const topic = entry.topic.length > 32 ? entry.topic.substring(0, 32) + '...' : entry.topic;
+          doc.text(topic, 80, y);
+          doc.text(`${entry.duration} min`, 155, y);
+        } else {
+          doc.setTextColor(100, 116, 139);
+          doc.text('—', 80, y);
+          doc.text('—', 155, y);
+        }
+        if (status === 'completed') { doc.setTextColor(52, 211, 153); doc.text('Completed', 182, y); }
+        else if (status === 'partial') { doc.setTextColor(251, 191, 36); doc.text('Partial', 182, y); }
+        else if (status === 'missed') { doc.setTextColor(248, 113, 113); doc.text('Missed', 182, y); }
+        else { doc.setTextColor(100, 116, 139); doc.text('—', 182, y); }
+        y += 9;
+      }
+
+      // Badges section
+      if (badges.length > 0) {
+        if (y > 250) { doc.addPage(); y = 20; }
+        y += 6;
+        doc.setFontSize(11);
+        doc.setTextColor(251, 191, 36);
+        doc.text('Badges Earned:', 14, y);
+        y += 8;
+        badges.forEach(b => {
+          doc.setFontSize(9);
+          doc.setTextColor(249, 250, 251);
+          doc.text(`${b.icon}  ${b.label} — ${b.desc}`, 18, y);
+          y += 8;
+        });
+      }
+
+      // Footer
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139);
+        doc.text('Digital Gaon — Study Streak', 14, 290);
+        doc.text(`Page ${p} of ${totalPages}`, pageWidth - 14, 290, { align: 'right' });
+      }
+
+      doc.save(`study-report-${monthName}-${calYear}.pdf`);
+    } catch (e) {
+      console.error(e);
+      alert('PDF generation failed.');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const {current,longest,consecutiveMissed}=computeStreaks(entryMap);
@@ -265,7 +367,7 @@ const StudyStreak = ({ userEmail }) => {
             onMouseEnter={e=>{if(!downloading){e.currentTarget.style.background='rgba(139,92,246,0.2)'}}}
             onMouseLeave={e=>{e.currentTarget.style.background='rgba(139,92,246,0.1)'}}
           >
-            {downloading ? '⏳ Generating...' : '⬇️ Download Monthly Report'}
+            {downloading ? '⏳ Generating PDF...' : '📄 Download Monthly Report (PDF)'}
           </button>
 
           <div style={ss.calDayNames}>
@@ -410,71 +512,6 @@ const StudyStreak = ({ userEmail }) => {
         </div>
       </div>
 
-      {/* ── Hidden Report Card (for html2canvas) ── */}
-      <div ref={reportRef} style={{display:'none',position:'fixed',top:'-9999px',left:'-9999px',width:700,padding:32,background:'linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%)',fontFamily:"'Outfit',sans-serif",color:'#fff',borderRadius:24}}>
-        {/* Report Header */}
-        <div style={{textAlign:'center',marginBottom:24}}>
-          <div style={{fontSize:28,fontWeight:900,background:'linear-gradient(135deg,#fff,#8b5cf6)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>📚 Study Report</div>
-          <div style={{fontSize:16,color:'rgba(255,255,255,0.5)',marginTop:4}}>{MONTHS[calMonth]} {calYear}</div>
-        </div>
-        {/* Month Stats */}
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:24}}>
-          {[{icon:'✅',val:(()=>{ let c=0; for(let i=1;i<=daysInMonth;i++){const s=getDayStatus(i);if(s==='completed')c++;} return c;})(),lbl:'Completed',color:'#34d399'},
-            {icon:'⚠️',val:(()=>{ let c=0; for(let i=1;i<=daysInMonth;i++){const s=getDayStatus(i);if(s==='partial')c++;} return c;})(),lbl:'Partial',color:'#fbbf24'},
-            {icon:'❌',val:(()=>{ let c=0; for(let i=1;i<=daysInMonth;i++){const s=getDayStatus(i);if(s==='missed')c++;} return c;})(),lbl:'Missed',color:'#f87171'},
-            {icon:'🔥',val:current,lbl:'Streak',color:'#fb923c'},
-          ].map((s,i)=>(
-            <div key={i} style={{background:'rgba(255,255,255,0.05)',borderRadius:12,padding:'12px 8px',textAlign:'center'}}>
-              <div style={{fontSize:20}}>{s.icon}</div>
-              <div style={{fontSize:22,fontWeight:900,color:s.color}}>{s.val}</div>
-              <div style={{fontSize:10,color:'rgba(255,255,255,0.45)',marginTop:2,textTransform:'uppercase',letterSpacing:'0.05em'}}>{s.lbl}</div>
-            </div>
-          ))}
-        </div>
-        {/* Calendar Grid */}
-        <div style={{background:'rgba(255,255,255,0.03)',borderRadius:16,padding:16,marginBottom:20}}>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:4,marginBottom:6}}>
-            {DAYS.map(d=><div key={d} style={{textAlign:'center',fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.35)',textTransform:'uppercase',letterSpacing:'0.05em'}}>{d}</div>)}
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:4}}>
-            {Array.from({length:firstDay},(_,i)=><div key={`e${i}`}/>)}
-            {Array.from({length:daysInMonth},(_,i)=>{
-              const day=i+1;
-              const status=getDayStatus(day);
-              const bg=status==='completed'?'rgba(16,185,129,0.2)':status==='partial'?'rgba(251,191,36,0.15)':status==='missed'?'rgba(239,68,68,0.12)':'rgba(255,255,255,0.02)';
-              const border=status==='completed'?'rgba(16,185,129,0.4)':status==='partial'?'rgba(251,191,36,0.35)':status==='missed'?'rgba(239,68,68,0.25)':'rgba(255,255,255,0.05)';
-              const col=status==='completed'?'#34d399':status==='partial'?'#fbbf24':status==='missed'?'#f87171':'rgba(255,255,255,0.3)';
-              return(
-                <div key={day} style={{background:bg,border:`1px solid ${border}`,borderRadius:8,padding:'6px 2px',textAlign:'center'}}>
-                  <div style={{fontSize:11,fontWeight:700,color:col}}>{day}</div>
-                  <div style={{fontSize:9}}>{status==='completed'?'✅':status==='partial'?'⚠️':status==='missed'?'❌':''}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        {/* Badges */}
-        {badges.length>0&&(
-          <div style={{background:'rgba(255,255,255,0.03)',borderRadius:16,padding:16,marginBottom:20}}>
-            <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:'rgba(255,255,255,0.7)'}}>🏆 Badges Earned</div>
-            <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-              {badges.map(b=>(
-                <div key={b.id} style={{display:'flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,rgba(251,191,36,0.1),rgba(251,146,60,0.06))',border:'1px solid rgba(251,191,36,0.25)',borderRadius:10,padding:'8px 14px'}}>
-                  <span style={{fontSize:18}}>{b.icon}</span>
-                  <div>
-                    <div style={{fontSize:12,fontWeight:700}}>{b.label}</div>
-                    <div style={{fontSize:10,color:'rgba(255,255,255,0.45)'}}>{b.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {/* Footer */}
-        <div style={{textAlign:'center',fontSize:11,color:'rgba(255,255,255,0.25)',borderTop:'1px solid rgba(255,255,255,0.07)',paddingTop:12}}>
-          Digital Gaon · Study Streak Report · Generated {new Date().toLocaleDateString('en-IN')}
-        </div>
-      </div>
 
       {/* Responsive overrides */}
       <style>{`

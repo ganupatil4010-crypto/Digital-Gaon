@@ -26,12 +26,20 @@
   padding: 0;
 }
 
+html, body {
+  height: auto;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg);
   color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
   position: relative;
 }
 
@@ -159,6 +167,12 @@ body {
   top: 0;
   z-index: 1000;
   transition: var(--transition);
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .sidebar-overlay {
@@ -237,6 +251,7 @@ body {
   width: calc(100% - var(--sidebar-width));
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
 .header {

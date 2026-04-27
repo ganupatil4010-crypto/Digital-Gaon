@@ -27,6 +27,26 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user'
   },
+  vyaparAccess: {
+    type: String,
+    enum: ['none', 'pending', 'approved'],
+    default: 'none'
+  },
+  dairyAccess: {
+    type: String,
+    enum: ['none', 'pending', 'approved'],
+    default: 'none'
+  },
+  pashuAccess: {
+    type: String,
+    enum: ['none', 'pending', 'approved'],
+    default: 'none'
+  },
+  yatraAccess: {
+    type: String,
+    enum: ['none', 'pending', 'approved'],
+    default: 'none'
+  },
 }, { timestamps: true, bufferCommands: false });
 
 module.exports = mongoose.model('User', userSchema);

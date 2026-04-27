@@ -6,6 +6,12 @@ const Product = require('./models/Product');
 const User = require('./models/User'); // If needed for cleanup
 const Expense = require('./models/Expense');
 const StudyEntry = require('./models/StudyEntry');
+const VyaparSale = require('./models/VyaparSale');
+const VyaparUdhaar = require('./models/VyaparUdhaar');
+const DairyEntry = require('./models/DairyEntry');
+const DairyCustomer = require('./models/DairyCustomer');
+const PashuTreatment = require('./models/PashuTreatment');
+const YatraBooking = require('./models/YatraBooking');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -14,6 +20,11 @@ const adminRoutes = require('./routes/adminRoutes');
 const adRoutes = require('./routes/adRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const studyRoutes = require('./routes/studyRoutes');
+const vyaparRoutes = require('./routes/vyaparRoutes');
+const dairyRoutes = require('./routes/dairyRoutes');
+const accessRoutes = require('./routes/accessRoutes');
+const pashuRoutes = require('./routes/pashuRoutes');
+const yatraRoutes = require('./routes/yatraRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -64,6 +75,11 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/ads', adRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/study', studyRoutes);
+app.use('/api/vyapar', vyaparRoutes);
+app.use('/api/dairy', dairyRoutes);
+app.use('/api/access', accessRoutes);
+app.use('/api/pashu', pashuRoutes);
+app.use('/api/yatra', yatraRoutes);
 
 // Senior Diagnostics: Global Error Handler
 app.use((err, req, res, next) => {
@@ -123,6 +139,47 @@ async function startCleanupJob() {
             });
             if (studyResult.deletedCount > 0) {
                 console.log(`Cleaned up ${studyResult.deletedCount} old study entries (older than 90 days).`);
+            }
+
+            // Delete Vyapar Sale entries older than 30 days
+            const vyaparSaleResult = await VyaparSale.deleteMany({
+                date: { $lt: thirtyDaysAgo }
+            });
+            if (vyaparSaleResult.deletedCount > 0) {
+                console.log(`Cleaned up ${vyaparSaleResult.deletedCount} old vyapar sale entries (older than 30 days).`);
+            }
+
+            // Delete settled Vyapar Udhaar entries older than 30 days
+            const vyaparUdhaarResult = await VyaparUdhaar.deleteMany({
+                date: { $lt: thirtyDaysAgo }
+            });
+            if (vyaparUdhaarResult.deletedCount > 0) {
+                console.log(`Cleaned up ${vyaparUdhaarResult.deletedCount} old udhaar entries (older than 30 days).`);
+            }
+
+            // Delete Dairy entries older than 30 days
+            const dairyResult = await DairyEntry.deleteMany({
+                date: { $lt: thirtyDaysAgo }
+            });
+            if (dairyResult.deletedCount > 0) {
+                console.log(`Cleaned up ${dairyResult.deletedCount} old dairy entries (older than 30 days).`);
+            }
+
+            // Delete Pashu Treatment records older than 30 days
+            const pashuResult = await PashuTreatment.deleteMany({
+                date: { $lt: thirtyDaysAgo },
+                nextDueDate: { $exists: false } // keep vaccination reminders
+            });
+            if (pashuResult.deletedCount > 0) {
+                console.log(`Cleaned up ${pashuResult.deletedCount} old pashu treatment records.`);
+            }
+            
+            // Delete Yatra Booking entries older than 30 days
+            const yatraResult = await YatraBooking.deleteMany({
+                tripDate: { $lt: thirtyDaysAgo }
+            });
+            if (yatraResult.deletedCount > 0) {
+                console.log(`Cleaned up ${yatraResult.deletedCount} old yatra bookings (older than 30 days).`);
             }
 
             // Clean orphaned wishlist IDs (product was deleted but ID still in wishlist)
