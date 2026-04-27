@@ -7,11 +7,11 @@ const FeatureLock = ({ feature, userEmail, children }) => {
   const [status, setStatus] = useState('loading'); // loading | none | pending | approved
   const [requesting, setRequesting] = useState(false);
 
-  const fieldKey = feature === 'yatra' ? 'yatraAccess' : (feature === 'pashu' ? 'pashuAccess' : (feature === 'vyapar' ? 'vyaparAccess' : 'dairyAccess'));
-  const featureName = feature === 'yatra' ? 'Yatra Saathi' : (feature === 'pashu' ? 'Pashu Saathi' : (feature === 'vyapar' ? 'Vyapar Saathi' : 'Dairy Saathi'));
-  const featureEmoji = feature === 'yatra' ? '🚕' : (feature === 'pashu' ? '🩺' : (feature === 'vyapar' ? '🛒' : '🐄'));
-  const accentColor = feature === 'yatra' ? '#f59e0b' : (feature === 'pashu' ? '#10b981' : (feature === 'vyapar' ? '#8b5cf6' : '#10b981'));
-  const accentBg = feature === 'yatra' ? 'rgba(245,158,11,0.15)' : (feature === 'pashu' ? 'rgba(16,185,129,0.15)' : (feature === 'vyapar' ? 'rgba(139,92,246,0.15)' : 'rgba(16,185,129,0.15)'));
+  const fieldKey = feature === 'yatra' ? 'yatraAccess' : (feature === 'pashu' ? 'pashuAccess' : (feature === 'vyapar' ? 'vyaparAccess' : (feature === 'hotel' ? 'hotelAccess' : 'dairyAccess')));
+  const featureName = feature === 'yatra' ? 'Yatra Saathi' : (feature === 'pashu' ? 'Pashu Saathi' : (feature === 'vyapar' ? 'Vyapar Saathi' : (feature === 'hotel' ? 'Hotel Saathi' : 'Dairy Saathi')));
+  const featureEmoji = feature === 'yatra' ? '🚕' : (feature === 'pashu' ? '🩺' : (feature === 'vyapar' ? '🛒' : (feature === 'hotel' ? '🏨' : '🐄')));
+  const accentColor = feature === 'yatra' ? '#f59e0b' : (feature === 'pashu' ? '#10b981' : (feature === 'vyapar' ? '#8b5cf6' : (feature === 'hotel' ? '#fbbf24' : '#10b981')));
+  const accentBg = feature === 'yatra' ? 'rgba(245,158,11,0.15)' : (feature === 'pashu' ? 'rgba(16,185,129,0.15)' : (feature === 'vyapar' ? 'rgba(139,92,246,0.15)' : (feature === 'hotel' ? 'rgba(251,191,36,0.15)' : 'rgba(16,185,129,0.15)')));
 
   const email = userEmail || localStorage.getItem('userEmail');
 

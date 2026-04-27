@@ -47,6 +47,11 @@ const userSchema = new mongoose.Schema({
     enum: ['none', 'pending', 'approved'],
     default: 'none'
   },
+  hotelAccess: {
+    type: String,
+    enum: ['none', 'pending', 'approved'],
+    default: 'none'
+  },
 }, { timestamps: true, bufferCommands: false });
 
 module.exports = mongoose.model('User', userSchema);

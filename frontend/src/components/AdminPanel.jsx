@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Users, ShoppingBag, Trash2, Shield, BarChart3, Search, Megaphone, Plus, ExternalLink, Power, Camera, Store, Milk, CheckCircle2, XCircle, Stethoscope, Car } from 'lucide-react';
+import { Users, ShoppingBag, Trash2, Shield, BarChart3, Search, Megaphone, Plus, ExternalLink, Power, Camera, Store, Milk, CheckCircle2, XCircle, Stethoscope, Car, Hotel } from 'lucide-react';
 import API_BASE_URL from '../config/api';
 
 const AdminPanel = () => {
@@ -12,8 +12,8 @@ const AdminPanel = () => {
     const [ads, setAds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [pendingRequests, setPendingRequests] = useState({ vyapar: [], dairy: [], pashu: [], yatra: [] });
-    const [approvedUsers, setApprovedUsers] = useState({ vyapar: [], dairy: [], pashu: [], yatra: [] });
+    const [pendingRequests, setPendingRequests] = useState({ vyapar: [], dairy: [], pashu: [], yatra: [], hotel: [] });
+    const [approvedUsers, setApprovedUsers] = useState({ vyapar: [], dairy: [], pashu: [], yatra: [], hotel: [] });
     const [newAd, setNewAd] = useState({ title: '', imageUrl: '', redirectUrl: '', placement: 'grid' });
     const [isAddingAd, setIsAddingAd] = useState(false);
 
@@ -50,7 +50,8 @@ const AdminPanel = () => {
                 vyapar: res.data.vyapar || [],
                 dairy: res.data.dairy || [],
                 pashu: res.data.pashu || [],
-                yatra: res.data.yatra || []
+                yatra: res.data.yatra || [],
+                hotel: res.data.hotel || []
             });
         } catch (err) { console.error('Error fetching access requests:', err); }
     };
@@ -70,7 +71,8 @@ const AdminPanel = () => {
                 vyapar: res.data.vyapar || [],
                 dairy: res.data.dairy || [],
                 pashu: res.data.pashu || [],
-                yatra: res.data.yatra || []
+                yatra: res.data.yatra || [],
+                hotel: res.data.hotel || []
             });
         } catch (err) { console.error('Error fetching approved users:', err); }
     };
@@ -116,7 +118,7 @@ const AdminPanel = () => {
         if (activeTab === 'users') fetchUsers();
         if (activeTab === 'products') fetchProducts();
         if (activeTab === 'ads') fetchAds();
-        if (activeTab === 'vyapar-requests' || activeTab === 'dairy-requests' || activeTab === 'pashu-requests' || activeTab === 'yatra-requests') {
+        if (activeTab === 'vyapar-requests' || activeTab === 'dairy-requests' || activeTab === 'pashu-requests' || activeTab === 'yatra-requests' || activeTab === 'hotel-requests') {
             fetchPendingRequests();
             fetchApprovedUsers();
         }
@@ -333,6 +335,19 @@ const AdminPanel = () => {
                             {pendingRequests.yatra?.length > 0 && (
                                 <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef4444', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.65rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     {pendingRequests.yatra.length}
+                                </span>
+                            )}
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('hotel-requests')}
+                            className={`tab-btn ${activeTab === 'hotel-requests' ? 'active' : ''}`}
+                            style={{ position: 'relative' }}
+                        >
+                            <Hotel size={18} /> 
+                            <span>Hotel Req.</span>
+                            {pendingRequests.hotel?.length > 0 && (
+                                <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef4444', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.65rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {pendingRequests.hotel.length}
                                 </span>
                             )}
                         </button>
@@ -885,6 +900,72 @@ const AdminPanel = () => {
                                             </div>
                                         </div>
                                         <button onClick={() => { if(window.confirm(`${u.name || u.email} ka Yatra Saathi access disable karna chahte ho?`)) handleAccessAction(u._id, 'yatra', 'reject'); }} style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <XCircle size={15} /> Disable
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Hotel Requests */}
+                {activeTab === 'hotel-requests' && (
+                    <div className="animate-fadeIn">
+                        <h3 style={{ color: '#fff', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Hotel size={20} color="#fbbf24" /> Hotel Saathi — Access Requests
+                        </h3>
+
+                        {/* Pending */}
+                        {pendingRequests.hotel?.length > 0 && (
+                            <div style={{ marginBottom: '2rem' }}>
+                                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>⏳ Pending Requests ({pendingRequests.hotel.length})</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    {(pendingRequests.hotel || []).map(u => (
+                                        <div key={u._id} style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                            <div>
+                                                <div style={{ color: '#fff', fontWeight: '700' }}>{u.name || 'User'}</div>
+                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>{u.email}</div>
+                                                {u.village && <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem' }}>📍 {u.village}</div>}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.6rem' }}>
+                                                <button onClick={() => handleAccessAction(u._id, 'hotel', 'approve')} style={{ background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff', border: 'none', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    <CheckCircle2 size={15} /> Approve
+                                                </button>
+                                                <button onClick={() => handleAccessAction(u._id, 'hotel', 'reject')} style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    <XCircle size={15} /> Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {pendingRequests.hotel?.length === 0 && (
+                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem', marginBottom: '2rem' }}>
+                                ✅ Koi pending request nahi hai
+                            </div>
+                        )}
+
+                        {/* Approved Users */}
+                        <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>✅ Approved Users ({approvedUsers.hotel?.length || 0})</div>
+                        {approvedUsers.hotel?.length === 0 ? (
+                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem' }}>
+                                Abhi kisi ko Hotel Saathi access approved nahi hua.
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {(approvedUsers.hotel || []).map(u => (
+                                    <div key={u._id} style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#34d399', flexShrink: 0 }} />
+                                            <div>
+                                                <div style={{ color: '#fff', fontWeight: '700' }}>{u.name || 'User'}</div>
+                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>{u.email}</div>
+                                                {u.village && <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem' }}>📍 {u.village}</div>}
+                                            </div>
+                                        </div>
+                                        <button onClick={() => { if(window.confirm(`${u.name || u.email} ka Hotel Saathi access disable karna chahte ho?`)) handleAccessAction(u._id, 'hotel', 'reject'); }} style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', padding: '0.55rem 1.1rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
                                             <XCircle size={15} /> Disable
                                         </button>
                                     </div>

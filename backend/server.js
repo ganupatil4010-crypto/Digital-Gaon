@@ -13,6 +13,8 @@ const DairyCustomer = require('./models/DairyCustomer');
 const PashuTreatment = require('./models/PashuTreatment');
 const PashuUdhaar = require('./models/PashuUdhaar');
 const DairyUdhaar = require('./models/DairyUdhaar');
+const HotelOrder = require('./models/HotelOrder');
+const HotelUdhaar = require('./models/HotelUdhaar');
 const YatraBooking = require('./models/YatraBooking');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
@@ -26,6 +28,7 @@ const vyaparRoutes = require('./routes/vyaparRoutes');
 const dairyRoutes = require('./routes/dairyRoutes');
 const accessRoutes = require('./routes/accessRoutes');
 const pashuRoutes = require('./routes/pashuRoutes');
+const hotelRoutes = require('./routes/hotelRoutes');
 const yatraRoutes = require('./routes/yatraRoutes');
 
 const app = express();
@@ -81,6 +84,7 @@ app.use('/api/vyapar', vyaparRoutes);
 app.use('/api/dairy', dairyRoutes);
 app.use('/api/access', accessRoutes);
 app.use('/api/pashu', pashuRoutes);
+app.use('/api/hotel', hotelRoutes);
 app.use('/api/yatra', yatraRoutes);
 
 // Senior Diagnostics: Global Error Handler
@@ -190,6 +194,22 @@ async function startCleanupJob() {
             });
             if (pashuUdhaarResult.deletedCount > 0) {
                 console.log(`Cleaned up ${pashuUdhaarResult.deletedCount} old pashu udhaar entries.`);
+            }
+
+            // Delete Hotel Orders older than 30 days
+            const hotelOrderResult = await HotelOrder.deleteMany({
+                date: { $lt: thirtyDaysAgo }
+            });
+            if (hotelOrderResult.deletedCount > 0) {
+                console.log(`Cleaned up ${hotelOrderResult.deletedCount} old hotel orders.`);
+            }
+
+            // Delete Hotel Udhaar older than 30 days
+            const hotelUdhaarResult = await HotelUdhaar.deleteMany({
+                date: { $lt: thirtyDaysAgo }
+            });
+            if (hotelUdhaarResult.deletedCount > 0) {
+                console.log(`Cleaned up ${hotelUdhaarResult.deletedCount} old hotel udhaar entries.`);
             }
             
             // Delete Yatra Booking entries older than 30 days

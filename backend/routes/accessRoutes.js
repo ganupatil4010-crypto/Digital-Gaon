@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 
-const FEATURES = ['vyapar', 'dairy', 'pashu', 'yatra'];
+const FEATURES = ['vyapar', 'dairy', 'pashu', 'yatra', 'hotel'];
 const getField = (f) => f + 'Access';
 
 // User requests access
@@ -45,13 +45,14 @@ router.get('/status', async (req, res) => {
     try {
         const { email } = req.query;
         if (!email) return res.status(400).json({ error: 'Email required' });
-        const user = await User.findOne({ email }).select('vyaparAccess dairyAccess pashuAccess yatraAccess');
-        if (!user) return res.json({ vyaparAccess: 'none', dairyAccess: 'none', pashuAccess: 'none', yatraAccess: 'none' });
+        const user = await User.findOne({ email }).select('vyaparAccess dairyAccess pashuAccess yatraAccess hotelAccess');
+        if (!user) return res.json({ vyaparAccess: 'none', dairyAccess: 'none', pashuAccess: 'none', yatraAccess: 'none', hotelAccess: 'none' });
         res.json({ 
             vyaparAccess: user.vyaparAccess || 'none', 
             dairyAccess: user.dairyAccess || 'none', 
             pashuAccess: user.pashuAccess || 'none',
-            yatraAccess: user.yatraAccess || 'none'
+            yatraAccess: user.yatraAccess || 'none',
+            hotelAccess: user.hotelAccess || 'none'
         });
     } catch { res.status(500).json({ error: 'Server error' }); }
 });
@@ -59,26 +60,28 @@ router.get('/status', async (req, res) => {
 // Admin: get all pending requests
 router.get('/pending', async (req, res) => {
     try {
-        const [vyapar, dairy, pashu, yatra] = await Promise.all([
+        const [vyapar, dairy, pashu, yatra, hotel] = await Promise.all([
             User.find({ vyaparAccess: 'pending' }).select('email name village createdAt'),
             User.find({ dairyAccess: 'pending' }).select('email name village createdAt'),
             User.find({ pashuAccess: 'pending' }).select('email name village createdAt'),
             User.find({ yatraAccess: 'pending' }).select('email name village createdAt'),
+            User.find({ hotelAccess: 'pending' }).select('email name village createdAt'),
         ]);
-        res.json({ vyapar, dairy, pashu, yatra });
+        res.json({ vyapar, dairy, pashu, yatra, hotel });
     } catch { res.status(500).json({ error: 'Server error' }); }
 });
 
 // Admin: get all approved users
 router.get('/approved', async (req, res) => {
     try {
-        const [vyapar, dairy, pashu, yatra] = await Promise.all([
+        const [vyapar, dairy, pashu, yatra, hotel] = await Promise.all([
             User.find({ vyaparAccess: 'approved' }).select('email name village createdAt'),
             User.find({ dairyAccess: 'approved' }).select('email name village createdAt'),
             User.find({ pashuAccess: 'approved' }).select('email name village createdAt'),
             User.find({ yatraAccess: 'approved' }).select('email name village createdAt'),
+            User.find({ hotelAccess: 'approved' }).select('email name village createdAt'),
         ]);
-        res.json({ vyapar, dairy, pashu, yatra });
+        res.json({ vyapar, dairy, pashu, yatra, hotel });
     } catch { res.status(500).json({ error: 'Server error' }); }
 });
 

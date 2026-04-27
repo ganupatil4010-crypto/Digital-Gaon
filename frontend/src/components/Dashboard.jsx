@@ -17,6 +17,7 @@ import StudyStreak from './StudyStreak';
 import DairySaathi from './DairySaathi';
 import PashuSaathi from './PashuSaathi';
 import YatraSaathi from './YatraSaathi';
+import HotelSaathi from './HotelSaathi';
 import FeatureLock from './FeatureLock';
 
 const Dashboard = ({ onLogout, userEmail }) => {
@@ -109,6 +110,12 @@ const Dashboard = ({ onLogout, userEmail }) => {
           return (
             <FeatureLock feature="yatra" userEmail={userEmail || localStorage.getItem('userEmail')}>
               <YatraSaathi userEmail={userEmail || localStorage.getItem('userEmail')} />
+            </FeatureLock>
+          );
+        case 'hotel':
+          return (
+            <FeatureLock feature="hotel" userEmail={userEmail || localStorage.getItem('userEmail')}>
+              <HotelSaathi userEmail={userEmail || localStorage.getItem('userEmail')} />
             </FeatureLock>
           );
       default:
