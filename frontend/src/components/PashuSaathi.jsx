@@ -4,7 +4,7 @@ import { jsPDF } from 'jspdf';
 import { 
   Heart, PlusCircle, Trash2, Calendar, ClipboardList, 
   Stethoscope, Syringe, User, Tag, Info, Download, Search,
-  CheckCircle2, AlertCircle, TrendingUp, IndianRupee, ArrowRight, Phone
+  CheckCircle2, AlertCircle, TrendingUp, IndianRupee, ArrowRight, Phone, Users
 } from 'lucide-react';
 import API_BASE_URL from '../config/api';
 
@@ -13,8 +13,14 @@ const PashuSaathi = ({ userEmail }) => {
   const [animals, setAnimals] = useState([]);
   const [treatments, setTreatments] = useState([]);
   const [reminders, setReminders] = useState([]);
-  const [stats, setStats] = useState({ totalAnimals: 0, monthlyTreatments: 0, upcomingTikas: 0, monthlyEarnings: 0 });
+  const [udhaarList, setUdhaarList] = useState([]);
+  const [stats, setStats] = useState({ totalAnimals: 0, monthlyTreatments: 0, upcomingTikas: 0, monthlyEarnings: 0, totalUdhaar: 0 });
   const [loading, setLoading] = useState(true);
+
+  // Udhaar Form
+  const [uName, setUName] = useState('');
+  const [uPhone, setUPhone] = useState('');
+  const [uAmount, setUAmount] = useState('');
 
   // Form States
   const [newAnimal, setNewAnimal] = useState({ ownerName: '', ownerPhone: '', animalType: 'Gaay', tagId: '', animalName: '' });
@@ -41,7 +47,10 @@ const PashuSaathi = ({ userEmail }) => {
       setAnimals(aRes.data);
       setTreatments(tRes.data);
       setReminders(rRes.data);
-      setStats(sRes.data);
+      const uRes = await axios.get(`${API_BASE_URL}/api/pashu/udhaar?email=${encodeURIComponent(email)}`);
+      setUdhaarList(uRes.data);
+      const udhaarTotal = uRes.data.reduce((sum, u) => sum + u.amount, 0);
+      setStats({ ...sRes.data, totalUdhaar: udhaarTotal });
     } catch (err) {
       console.error('Error fetching pashu data:', err);
     } finally {
@@ -81,6 +90,63 @@ const PashuSaathi = ({ userEmail }) => {
       await axios.delete(`${API_BASE_URL}/api/pashu/animals/${id}`);
       fetchData();
     } catch (err) { alert('Delete karne mein galti hui.'); }
+  };
+
+  const handleAddUdhaar = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API_BASE_URL}/api/pashu/udhaar`, {
+        email, ownerName: uName, ownerPhone: uPhone, amount: Number(uAmount)
+      });
+      setUName(''); setUPhone(''); setUAmount('');
+      fetchData();
+    } catch (err) { alert('Udhaar save karne mein galti hui.'); }
+  };
+
+  const handleSettleUdhaar = async (id, name) => {
+    if (!window.confirm(`${name} ka udhaar settle ho gaya?`)) return;
+    try {
+      await axios.delete(`${API_BASE_URL}/api/pashu/udhaar/${id}`);
+      fetchData();
+    } catch (err) { console.error('Error settling udhaar:', err); }
+  };
+
+  const handleDownloadUdhaarPDF = () => {
+    const doc = new jsPDF();
+    const pw = doc.internal.pageSize.getWidth();
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, pw, 35, 'F');
+    doc.setFontSize(22);
+    doc.setTextColor(248, 113, 113);
+    doc.text('Pashu Saathi — Udhaar Report', 14, 22);
+    doc.setFontSize(10);
+    doc.setTextColor(156, 163, 175);
+    doc.text(`Total Baaki: Rs.${stats.totalUdhaar}`, 14, 30);
+    doc.text(`Generated: ${new Date().toLocaleDateString('hi-IN')}`, pw - 14, 30, { align: 'right' });
+
+    let y = 45;
+    doc.setFillColor(30, 41, 59);
+    doc.rect(10, y - 6, pw - 20, 10, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.text('Owner Naam', 14, y);
+    doc.text('Mobile', 80, y);
+    doc.text('Udhaar (Rs.)', 140, y);
+    doc.text('Date', 175, y);
+
+    y += 10;
+    doc.setTextColor(0, 0, 0);
+    udhaarList.forEach((u, i) => {
+      doc.text(u.ownerName, 14, y);
+      doc.text(u.ownerPhone || '-', 80, y);
+      doc.setTextColor(220, 38, 38);
+      doc.text(`Rs.${u.amount}`, 140, y);
+      doc.setTextColor(0, 0, 0);
+      doc.text(new Date(u.date).toLocaleDateString('hi-IN'), 175, y);
+      y += 8;
+      if (y > 270) { doc.addPage(); y = 20; }
+    });
+
+    doc.save(`pashu-udhaar-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const downloadReport = () => {
@@ -158,12 +224,20 @@ const PashuSaathi = ({ userEmail }) => {
           <div className="stat-progress" style={{ width: '80%' }}></div>
         </div>
         <div className="stat-card-glass p-earnings">
-          <div className="stat-icon-wrapper"><IndianRupee size={22} /></div>
+          <div className="stat-icon-wrapper"><TrendingUp size={22} /></div>
           <div className="stat-info">
             <span className="stat-val">₹{stats.monthlyEarnings}</span>
             <span className="stat-lbl">Total Kamai</span>
           </div>
           <div className="stat-progress" style={{ width: '55%' }}></div>
+        </div>
+        <div className="stat-card-glass p-reminders">
+          <div className="stat-icon-wrapper"><IndianRupee size={22} /></div>
+          <div className="stat-info">
+            <span className="stat-val">₹{stats.totalUdhaar}</span>
+            <span className="stat-lbl">Baaki Udhaar</span>
+          </div>
+          <div className="stat-progress" style={{ width: '45%', color: '#f87171' }}></div>
         </div>
       </div>
 
@@ -180,6 +254,9 @@ const PashuSaathi = ({ userEmail }) => {
         </button>
         <button className={`pashu-tab-item ${activeTab === 'reminders' ? 'active' : ''}`} onClick={() => setActiveTab('reminders')}>
           <Calendar size={18} /> <span>Reminders</span>
+        </button>
+        <button className={`pashu-tab-item ${activeTab === 'udhaar' ? 'active' : ''}`} onClick={() => setActiveTab('udhaar')}>
+          <Users size={18} /> <span>Udhaar Khata</span>
         </button>
       </div>
 
@@ -447,6 +524,66 @@ const PashuSaathi = ({ userEmail }) => {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* UDHAAR KHATA TAB */}
+            {activeTab === 'udhaar' && (
+              <div className="udhaar-management">
+                <div className="pashu-grid-layout reverse">
+                  <div className="pashu-scroll-list">
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0 10px'}}>
+                      <h3 style={{margin:0, fontSize:'0.9rem', color:'rgba(255,255,255,0.5)'}}>Pending Udhaar</h3>
+                      <button onClick={handleDownloadUdhaarPDF} className="pashu-btn-premium tiny outline">
+                        <Download size={14} /> Download PDF
+                      </button>
+                    </div>
+                    {udhaarList.length === 0 ? (
+                      <div className="pashu-empty-state large">
+                        <CheckCircle2 size={60} style={{color: '#10b981'}}/>
+                        <p>Koi udhaar baaki nahi hai. Badhaai!</p>
+                      </div>
+                    ) : udhaarList.map(u => (
+                      <div key={u._id} className="pashu-card animal" style={{borderLeft: '4px solid #f87171'}}>
+                         <div className="animal-details">
+                          <h3 style={{marginBottom:'5px'}}>{u.ownerName}</h3>
+                          <div className="detail-tags">
+                            <span className="tag-pill" style={{color:'#f87171', background:'rgba(248,113,113,0.1)'}}>₹{u.amount} Udhaar</span>
+                            <span className="tag-pill">{new Date(u.date).toLocaleDateString('hi-IN')}</span>
+                          </div>
+                          {u.ownerPhone && <div className="detail-phone"><Phone size={12} /> {u.ownerPhone}</div>}
+                        </div>
+                        <button onClick={() => handleSettleUdhaar(u._id, u.ownerName)} className="pashu-btn-icon" style={{color:'#10b981'}}>
+                          <CheckCircle2 size={22} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="glass-panel side-form">
+                    <div className="panel-header">
+                      <PlusCircle size={20} color="#f87171" />
+                      <h3>Naya Udhaar Likho</h3>
+                    </div>
+                    <form onSubmit={handleAddUdhaar} className="premium-form">
+                      <div className="pashu-input-group">
+                        <label>Pashu Maalik ka Naam</label>
+                        <input type="text" placeholder="e.g. Rajesh Kumar" value={uName} onChange={e => setUName(e.target.value)} required />
+                      </div>
+                      <div className="pashu-input-group">
+                        <label>Mobile Number (Optional)</label>
+                        <input type="tel" placeholder="9876543210" value={uPhone} onChange={e => setUPhone(e.target.value)} />
+                      </div>
+                      <div className="pashu-input-group">
+                        <label>Udhaar Rakam (₹)</label>
+                        <input type="number" placeholder="0" value={uAmount} onChange={e => setUAmount(e.target.value)} required />
+                      </div>
+                      <button type="submit" className="pashu-btn-submit" style={{background: 'linear-gradient(135deg, #f87171, #ef4444)'}}>
+                        Udhaar Darz Karo <PlusCircle size={18} />
+                      </button>
+                    </form>
+                  </div>
                 </div>
               </div>
             )}

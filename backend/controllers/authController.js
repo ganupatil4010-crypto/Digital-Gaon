@@ -22,7 +22,7 @@ exports.sendOtp = async (req, res) => {
     try {
         const { email } = req.body;
         console.log('Email to send to:', email);
-        
+
         if (!email) {
             console.log('Error: No email provided in request body');
             return res.status(400).json({ message: 'Email is required' });
@@ -42,9 +42,9 @@ exports.sendOtp = async (req, res) => {
 
         if (process.env.DEV_MODE === 'true') {
             console.log('DEV_MODE is true. OTP:', otp);
-            return res.status(200).json({ 
-                message: 'OTP sent successfully (DEV MODE: 123456)', 
-                devOtp: '123456' 
+            return res.status(200).json({
+                message: 'OTP sent successfully (DEV MODE: 123456)',
+                devOtp: '123456'
             });
         }
         // ... rest of email logic ...
@@ -52,17 +52,17 @@ exports.sendOtp = async (req, res) => {
         // Send email
         const isEmailConfigured = process.env.EMAIL_USER && process.env.EMAIL_USER !== 'your_gmail@gmail.com' && process.env.EMAIL_PASS !== 'your_app_password';
         console.log('Is email configured?', isEmailConfigured);
-        
+
         if (!isEmailConfigured) {
             console.log('Using MOCK email delivery (No credentials found in .env)');
-            return res.status(200).json({ 
-                message: 'OTP sent successfully (MOCK MODE: 123456)', 
-                devOtp: '123456' 
+            return res.status(200).json({
+                message: 'OTP sent successfully (MOCK MODE: 123456)',
+                devOtp: '123456'
             });
         }
 
         console.log('Attempting to send real email via Gmail SMTP...');
-        
+
         const mailOptions = {
             from: `"Digital Gaon Security" <${process.env.EMAIL_USER}>`,
             to: email,
@@ -94,14 +94,14 @@ exports.verifyOtp = async (req, res) => {
 
         if (process.env.DEV_MODE === 'true' && otp === '123456') {
             const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-            
+
             // Ensure user is created in database during DEV_MODE login
             await User.findOneAndUpdate(
                 { email },
                 { $setOnInsert: { email } },
                 { upsert: true, new: true }
             );
-            
+
             return res.status(200).json({ message: 'OTP verified successfully (DEV MODE)', token });
         }
 

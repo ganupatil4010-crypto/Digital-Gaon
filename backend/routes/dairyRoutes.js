@@ -21,8 +21,8 @@ router.get('/customers', async (req, res) => {
 router.post('/customers', async (req, res) => {
     try {
         const { email, customerName, phoneNumber, morningQty, eveningQty, ratePerLitre } = req.body;
-        if (!email || !customerName || !ratePerLitre) return res.status(400).json({ error: 'Missing fields' });
-        const customer = new DairyCustomer({ email, customerName, phoneNumber, morningQty, eveningQty, ratePerLitre });
+        if (!email || !customerName) return res.status(400).json({ error: 'Missing fields' });
+        const customer = new DairyCustomer({ email, customerName, phoneNumber, morningQty: morningQty || 0, eveningQty: eveningQty || 0, ratePerLitre: ratePerLitre || 0 });
         await customer.save();
         res.status(201).json(customer);
     } catch (err) {
@@ -42,18 +42,19 @@ router.delete('/customers/:id', async (req, res) => {
 
 // ─── DAILY ENTRIES ────────────────────────────────────────────
 
-// Get entries (optionally filter by date range)
+// Get entries (optionally filter by date range and customer)
 router.get('/entries', async (req, res) => {
     try {
-        const { email, from, to } = req.query;
+        const { email, from, to, customerId } = req.query;
         if (!email) return res.status(400).json({ error: 'Email required' });
         const filter = { email };
+        if (customerId) filter.customerId = customerId;
         if (from || to) {
             filter.date = {};
             if (from) filter.date.$gte = new Date(from);
             if (to) filter.date.$lte = new Date(to);
         }
-        const entries = await DairyEntry.find(filter).sort({ date: -1 });
+        const entries = await DairyEntry.find(filter).sort({ date: 1 }); // Sort by date ascending for bills
         res.json(entries);
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
@@ -109,19 +110,68 @@ router.get('/monthly-bill', async (req, res) => {
 
         const entries = await DairyEntry.find({ email, date: { $gte: from, $lte: to } });
 
-        // Group by customerName
+        // Group by customerId
         const billMap = {};
         entries.forEach(e => {
-            if (!billMap[e.customerName]) {
-                billMap[e.customerName] = { customerName: e.customerName, totalLitres: 0, totalAmount: 0, paidAmount: 0, entries: 0 };
+            const key = e.customerId || e.customerName; // fallback for old entries
+            if (!billMap[key]) {
+                billMap[key] = { 
+                    customerId: e.customerId, 
+                    customerName: e.customerName, 
+                    totalLitres: 0, 
+                    totalAmount: 0, 
+                    paidAmount: 0, 
+                    entries: 0 
+                };
             }
-            billMap[e.customerName].totalLitres += e.totalLitres;
-            billMap[e.customerName].totalAmount += e.totalAmount;
-            if (e.isPaid) billMap[e.customerName].paidAmount += e.totalAmount;
-            billMap[e.customerName].entries++;
+            billMap[key].totalLitres += e.totalLitres;
+            billMap[key].totalAmount += e.totalAmount;
+            if (e.isPaid) billMap[key].paidAmount += e.totalAmount;
+            billMap[key].entries++;
         });
 
         res.json(Object.values(billMap));
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+const DairyUdhaar = require('../models/DairyUdhaar');
+
+// ... (existing routes)
+
+// ─── UDHAAR KHATA ─────────────────────────────────────────────
+
+// Get all udhaar for a user
+router.get('/udhaar', async (req, res) => {
+    try {
+        const { email } = req.query;
+        if (!email) return res.status(400).json({ error: 'Email required' });
+        const udhaar = await DairyUdhaar.find({ email, isSettle: false }).sort({ date: -1 });
+        res.json(udhaar);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// Add new udhaar entry
+router.post('/udhaar', async (req, res) => {
+    try {
+        const { email, customerName, phoneNumber, amount } = req.body;
+        if (!email || !customerName || !amount) return res.status(400).json({ error: 'Missing fields' });
+        const entry = new DairyUdhaar({ email, customerName, phoneNumber, amount });
+        await entry.save();
+        res.status(201).json(entry);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// Settle (Delete/Archive) udhaar
+router.delete('/udhaar/:id', async (req, res) => {
+    try {
+        await DairyUdhaar.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Udhaar settled' });
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
     }

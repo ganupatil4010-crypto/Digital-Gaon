@@ -11,6 +11,8 @@ const VyaparUdhaar = require('./models/VyaparUdhaar');
 const DairyEntry = require('./models/DairyEntry');
 const DairyCustomer = require('./models/DairyCustomer');
 const PashuTreatment = require('./models/PashuTreatment');
+const PashuUdhaar = require('./models/PashuUdhaar');
+const DairyUdhaar = require('./models/DairyUdhaar');
 const YatraBooking = require('./models/YatraBooking');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
@@ -172,6 +174,22 @@ async function startCleanupJob() {
             });
             if (pashuResult.deletedCount > 0) {
                 console.log(`Cleaned up ${pashuResult.deletedCount} old pashu treatment records.`);
+            }
+
+            // Delete Dairy Udhaar older than 30 days
+            const dairyUdhaarResult = await DairyUdhaar.deleteMany({
+                date: { $lt: thirtyDaysAgo }
+            });
+            if (dairyUdhaarResult.deletedCount > 0) {
+                console.log(`Cleaned up ${dairyUdhaarResult.deletedCount} old dairy udhaar entries.`);
+            }
+
+            // Delete Pashu Udhaar older than 30 days
+            const pashuUdhaarResult = await PashuUdhaar.deleteMany({
+                date: { $lt: thirtyDaysAgo }
+            });
+            if (pashuUdhaarResult.deletedCount > 0) {
+                console.log(`Cleaned up ${pashuUdhaarResult.deletedCount} old pashu udhaar entries.`);
             }
             
             // Delete Yatra Booking entries older than 30 days

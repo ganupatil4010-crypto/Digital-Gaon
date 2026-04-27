@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
-import { Milk, Users, PlusCircle, Trash2, CheckCircle2, Download, TrendingUp, Phone } from 'lucide-react';
+import { Milk, Users, PlusCircle, Trash2, CheckCircle2, Download, TrendingUp, Phone, IndianRupee } from 'lucide-react';
 import API_BASE_URL from '../config/api';
 
 const DairySaathi = ({ userEmail }) => {
@@ -9,11 +9,19 @@ const DairySaathi = ({ userEmail }) => {
   const [customers, setCustomers] = useState([]);
   const [entries, setEntries] = useState([]);
   const [monthlyBill, setMonthlyBill] = useState([]);
+  const [udhaarList, setUdhaarList] = useState([]);
+  const [totalUdhaar, setTotalUdhaar] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // Udhaar form
+  const [uName, setUName] = useState('');
+  const [uPhone, setUPhone] = useState('');
+  const [uAmount, setUAmount] = useState('');
 
   // Customer form
   const [cName, setCName] = useState('');
   const [cPhone, setCPhone] = useState('');
+  const [cRate, setCRate] = useState('');
 
   // Entry form
   const [selCustomer, setSelCustomer] = useState('');
@@ -31,7 +39,7 @@ const DairySaathi = ({ userEmail }) => {
 
   const fetchAll = async () => {
     setLoading(true);
-    await Promise.all([fetchCustomers(), fetchEntries(), fetchBill()]);
+    await Promise.all([fetchCustomers(), fetchEntries(), fetchBill(), fetchUdhaar()]);
     setLoading(false);
   };
 
@@ -54,6 +62,15 @@ const DairySaathi = ({ userEmail }) => {
       const r = await axios.get(`${API_BASE_URL}/api/dairy/monthly-bill?email=${encodeURIComponent(email)}&year=${billYear}&month=${billMonth}`);
       setMonthlyBill(r.data);
     } catch (e) { console.error(e); }
+  };
+
+  const fetchUdhaar = async () => {
+    try {
+      const r = await axios.get(`${API_BASE_URL}/api/dairy/udhaar?email=${encodeURIComponent(email)}`);
+      setUdhaarList(r.data);
+      const total = r.data.reduce((sum, u) => sum + u.amount, 0);
+      setTotalUdhaar(total);
+    } catch (err) { console.error('Error fetching udhaar:', err); }
   };
 
   useEffect(() => { if (email) fetchBill(); }, [billMonth, billYear]);
@@ -99,6 +116,63 @@ const DairySaathi = ({ userEmail }) => {
     fetchEntries(); fetchBill();
   };
 
+  const handleAddUdhaar = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API_BASE_URL}/api/dairy/udhaar`, {
+        email, customerName: uName, phoneNumber: uPhone, amount: Number(uAmount)
+      });
+      setUName(''); setUPhone(''); setUAmount('');
+      fetchUdhaar();
+    } catch (err) { alert('Failed to add udhaar.'); }
+  };
+
+  const handleSettleUdhaar = async (id, name) => {
+    if (!window.confirm(`${name} ka udhaar settle ho gaya?`)) return;
+    try {
+      await axios.delete(`${API_BASE_URL}/api/dairy/udhaar/${id}`);
+      fetchUdhaar();
+    } catch (err) { console.error('Error settling udhaar:', err); }
+  };
+
+  const handleDownloadUdhaarPDF = () => {
+    const doc = new jsPDF();
+    const pw = doc.internal.pageSize.getWidth();
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, pw, 35, 'F');
+    doc.setFontSize(22);
+    doc.setTextColor(248, 113, 113);
+    doc.text('Dairy Saathi — Udhaar Report', 14, 22);
+    doc.setFontSize(10);
+    doc.setTextColor(156, 163, 175);
+    doc.text(`Total Udhaar: Rs.${totalUdhaar.toFixed(0)}`, 14, 30);
+    doc.text(`Date: ${new Date().toLocaleDateString('hi-IN')}`, pw - 14, 30, { align: 'right' });
+
+    let y = 45;
+    doc.setFillColor(30, 41, 59);
+    doc.rect(10, y - 6, pw - 20, 10, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.text('Customer Naam', 14, y);
+    doc.text('Mobile', 80, y);
+    doc.text('Udhaar (Rs.)', 140, y);
+    doc.text('Date', 175, y);
+
+    y += 10;
+    doc.setTextColor(0, 0, 0);
+    udhaarList.forEach((u, i) => {
+      doc.text(u.customerName, 14, y);
+      doc.text(u.phoneNumber || '-', 80, y);
+      doc.setTextColor(220, 38, 38);
+      doc.text(`Rs.${u.amount.toFixed(0)}`, 140, y);
+      doc.setTextColor(0, 0, 0);
+      doc.text(new Date(u.date).toLocaleDateString('hi-IN'), 175, y);
+      y += 8;
+      if (y > 270) { doc.addPage(); y = 20; }
+    });
+
+    doc.save(`dairy-udhaar-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   const handleDownloadBillPDF = () => {
     const doc = new jsPDF();
     const pw = doc.internal.pageSize.getWidth();
@@ -109,7 +183,7 @@ const DairySaathi = ({ userEmail }) => {
     doc.setFontSize(20); doc.setTextColor(52, 211, 153);
     doc.text('Dairy Saathi', 14, 16);
     doc.setFontSize(11); doc.setTextColor(156, 163, 175);
-    doc.text(`Monthly Bill — ${months[billMonth]} ${billYear}`, 14, 26);
+    doc.text(`Monthly Bill Summary — ${months[billMonth]} ${billYear}`, 14, 26);
     doc.text(`Generated: ${today}`, pw - 14, 26, { align: 'right' });
     const totalRev = monthlyBill.reduce((s, b) => s + b.totalAmount, 0);
     doc.setFontSize(11); doc.setTextColor(52, 211, 153);
@@ -143,7 +217,77 @@ const DairySaathi = ({ userEmail }) => {
       doc.text('Digital Gaon — Dairy Saathi', 14, 290);
       doc.text(`Page ${p} of ${tp}`, pw - 14, 290, { align: 'right' });
     }
-    doc.save(`dairy-bill-${months[billMonth]}-${billYear}.pdf`);
+    doc.save(`dairy-summary-${months[billMonth]}-${billYear}.pdf`);
+  };
+
+  const handleDownloadCustomerBill = async (b) => {
+    try {
+      const from = new Date(billYear, billMonth, 1).toISOString();
+      const to = new Date(billYear, billMonth + 1, 0, 23, 59, 59).toISOString();
+      
+      const r = await axios.get(`${API_BASE_URL}/api/dairy/entries?email=${encodeURIComponent(email)}&customerId=${b.customerId}&from=${from}&to=${to}`);
+      const customerEntries = r.data;
+
+      const doc = new jsPDF();
+      const pw = doc.internal.pageSize.getWidth();
+      const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+      // Header
+      doc.setFillColor(30, 41, 59); doc.rect(0, 0, pw, 50, 'F');
+      doc.setFontSize(22); doc.setTextColor(52, 211, 153);
+      doc.text('DAIRY SAATHI', 14, 20);
+      doc.setFontSize(10); doc.setTextColor(255, 255, 255);
+      doc.text('Monthly Milk Receipt', 14, 28);
+      
+      doc.setFontSize(10); doc.setTextColor(156, 163, 175);
+      doc.text(`Month: ${months[billMonth]} ${billYear}`, pw - 14, 20, { align: 'right' });
+      doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, pw - 14, 28, { align: 'right' });
+
+      // Customer Info
+      doc.setFillColor(243, 244, 246); doc.rect(14, 60, pw - 28, 25, 'F');
+      doc.setFontSize(11); doc.setTextColor(15, 23, 42);
+      doc.text(`Customer Name: ${b.customerName}`, 20, 70);
+      doc.setFontSize(11); doc.setTextColor(15, 23, 42);
+      doc.text(`Total Amount Due: Rs. ${b.totalAmount.toFixed(0)}`, pw - 20, 70, { align: 'right' });
+      doc.setFontSize(9); doc.setTextColor(100, 116, 139);
+      doc.text(`Total Milk: ${b.totalLitres.toFixed(1)} Litres across ${b.entries} days`, 20, 78);
+
+      // Table Header
+      let y = 100;
+      doc.setFillColor(15, 23, 42); doc.rect(14, y - 6, pw - 28, 10, 'F');
+      doc.setFontSize(9); doc.setTextColor(255, 255, 255);
+      doc.text('Date', 18, y); 
+      doc.text('Morning', 50, y); 
+      doc.text('Evening', 80, y); 
+      doc.text('Total', 110, y); 
+      doc.text('Rate', 140, y); 
+      doc.text('Amount', 170, y);
+      y += 10;
+
+      // Table Body
+      customerEntries.forEach((e, i) => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        doc.setFillColor(i % 2 === 0 ? 255 : 249, 250, 251);
+        doc.rect(14, y - 5, pw - 28, 9, 'F');
+        doc.setTextColor(15, 23, 42);
+        doc.text(new Date(e.date).toLocaleDateString('en-IN'), 18, y);
+        doc.text(`${e.morningQty}L`, 50, y);
+        doc.text(`${e.eveningQty}L`, 80, y);
+        doc.text(`${e.totalLitres}L`, 110, y);
+        doc.text(`Rs.${e.ratePerLitre}`, 140, y);
+        doc.text(`Rs.${e.totalAmount.toFixed(0)}`, 170, y);
+        y += 9;
+      });
+
+      // Footer
+      doc.setFontSize(8); doc.setTextColor(156, 163, 175);
+      doc.text('This is a computer generated receipt.', pw / 2, 285, { align: 'center' });
+
+      doc.save(`bill-${b.customerName}-${months[billMonth]}.pdf`);
+    } catch (err) {
+      console.error(err);
+      alert('Bill download karne mein galti hui.');
+    }
   };
 
   const todayEntries = entries.filter(e => new Date(e.date).toDateString() === new Date().toDateString());
@@ -172,6 +316,7 @@ const DairySaathi = ({ userEmail }) => {
           { label: "Aaj ke Litres", value: `${todayLitres.toFixed(1)} L`, color: '#34d399' },
           { label: "Aaj ki Kamai", value: `₹${todayRevenue.toFixed(0)}`, color: '#60a5fa' },
           { label: "Is Mahine", value: `₹${monthRevenue.toFixed(0)}`, color: '#a78bfa' },
+          { label: "Baaki Udhaar", value: `₹${totalUdhaar.toFixed(0)}`, color: '#f87171' },
           { label: "Customers", value: customers.length, color: '#fbbf24' },
         ].map((s, i) => (
           <React.Fragment key={i}>
@@ -186,7 +331,7 @@ const DairySaathi = ({ userEmail }) => {
 
       {/* Tabs */}
       <div className="dairy-tabs">
-        {[['entry','📝 Daily Entry'],['customers','👥 Customers'],['bill','🧾 Monthly Bill']].map(([id, label]) => (
+        {[['entry','📝 Daily Entry'],['customers','👥 Customers'],['bill','🧾 Monthly Bill'],['udhaar','🚩 Udhaar Khata']].map(([id, label]) => (
           <button key={id} onClick={() => setActiveTab(id)} className={`dairy-tab-btn ${activeTab === id ? 'active' : ''}`}>{label}</button>
         ))}
       </div>
@@ -319,7 +464,7 @@ const DairySaathi = ({ userEmail }) => {
                 {MONTHS[billMonth]} mein koi entry nahi hai.
               </div>
             ) : monthlyBill.map((b, i) => (
-              <div key={i} className="dairy-card" style={{borderLeft:'3px solid rgba(52,211,153,0.5)'}}>
+              <div key={i} className="dairy-card" style={{borderLeft:'3px solid rgba(52,211,153,0.5)', position: 'relative'}}>
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'1rem'}}>
                   <div>
                     <div className="dairy-row-title" style={{fontSize:'1.1rem'}}>{b.customerName}</div>
@@ -330,9 +475,30 @@ const DairySaathi = ({ userEmail }) => {
                     <div style={{fontSize:'0.8rem', color:'#60a5fa'}}>{b.totalLitres.toFixed(1)} Litres</div>
                   </div>
                 </div>
-                <div style={{background:'rgba(255,255,255,0.03)', borderRadius:'10px', padding:'0.75rem', display:'flex', justifyContent:'space-between', fontSize:'0.85rem', color:'rgba(255,255,255,0.5)'}}>
-                  <span>Total Amount</span>
-                  <span style={{color:'#34d399', fontWeight:'700'}}>₹{b.totalAmount.toFixed(0)}</span>
+                <div style={{display: 'flex', gap: '0.5rem'}}>
+                  <div style={{flex: 1, background:'rgba(255,255,255,0.03)', borderRadius:'10px', padding:'0.75rem', display:'flex', justifyContent:'space-between', fontSize:'0.85rem', color:'rgba(255,255,255,0.5)'}}>
+                    <span>Total Amount</span>
+                    <span style={{color:'#34d399', fontWeight:'700'}}>₹{b.totalAmount.toFixed(0)}</span>
+                  </div>
+                  <button 
+                    onClick={() => handleDownloadCustomerBill(b)}
+                    className="dairy-row-btn"
+                    style={{
+                      background: 'rgba(167, 139, 250, 0.1)',
+                      border: '1px solid rgba(167, 139, 250, 0.3)',
+                      color: '#a78bfa',
+                      borderRadius: '10px',
+                      padding: '0.5rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: '0.2s'
+                    }}
+                    title="Download Individual Receipt"
+                  >
+                    <Download size={18} />
+                  </button>
                 </div>
               </div>
             ))}
@@ -343,6 +509,73 @@ const DairySaathi = ({ userEmail }) => {
               <span style={{fontSize:'1.5rem', fontWeight:'800', color:'#34d399'}}>₹{monthRevenue.toFixed(0)}</span>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── UDHAAR KHATA TAB ── */}
+      {activeTab === 'udhaar' && (
+        <div className="dairy-grid">
+          <section className="dairy-card">
+            <h3 className="dairy-card-title"><PlusCircle size={18} /> Naya Udhaar Likho</h3>
+            <form onSubmit={handleAddUdhaar}>
+              <div className="dairy-input-group">
+                <label>Customer ka Naam</label>
+                <input type="text" value={uName} onChange={e => setUName(e.target.value)} placeholder="e.g. Ramesh Kumar" required />
+              </div>
+              <div className="dairy-input-group">
+                <label>Mobile Number (Optional)</label>
+                <input type="tel" value={uPhone} onChange={e => setUPhone(e.target.value)} placeholder="9876543210" />
+              </div>
+              <div className="dairy-input-group">
+                <label>Udhaar Rakam (₹)</label>
+                <input type="number" value={uAmount} onChange={e => setUAmount(e.target.value)} placeholder="0" min="1" required />
+              </div>
+              <button type="submit" className="dairy-btn primary" style={{background: 'linear-gradient(135deg, #f87171, #ef4444)'}}><IndianRupee size={16}/> Udhaar Darz Karo</button>
+            </form>
+          </section>
+
+          <section className="dairy-card">
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.25rem'}}>
+              <h3 className="dairy-card-title" style={{margin:0}}><IndianRupee size={18} /> Baaki Udhaar List</h3>
+              <button 
+                onClick={handleDownloadUdhaarPDF} 
+                className="dairy-row-btn" 
+                style={{
+                  background: 'transparent', 
+                  border: '1px solid rgba(255,255,255,0.1)', 
+                  color: 'rgba(255,255,255,0.5)', 
+                  padding: '5px 10px', 
+                  borderRadius: '8px', 
+                  fontSize: '0.8rem', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+              >
+                <Download size={14} /> Download
+              </button>
+            </div>
+            <div className="dairy-list">
+              {udhaarList.length === 0 ? <div className="dairy-empty"><CheckCircle2 size={36} style={{opacity:0.2, color: '#34d399'}}/><br/>Koi udhaar baaki nahi hai.</div> :
+                udhaarList.map(u => (
+                  <div key={u._id} className="dairy-row" style={{borderLeft: '3px solid #f87171'}}>
+                    <div className="dairy-row-main">
+                      <div>
+                        <span className="dairy-row-title">{u.customerName}</span>
+                        <span className="dairy-row-sub">
+                          {new Date(u.date).toLocaleDateString('hi-IN')}
+                          {u.phoneNumber && <> • {u.phoneNumber}</>}
+                        </span>
+                      </div>
+                      <span className="dairy-row-amount" style={{color:'#f87171'}}>₹{u.amount.toFixed(0)}</span>
+                    </div>
+                    <button className="settle-btn" onClick={() => handleSettleUdhaar(u._id, u.customerName)} title="Settle"><CheckCircle2 size={16}/></button>
+                  </div>
+                ))
+              }
+            </div>
+          </section>
         </div>
       )}
 
@@ -387,6 +620,8 @@ const DairySaathi = ({ userEmail }) => {
         .dairy-row-amount { font-weight: 700; font-size: 1.1rem; color: #34d399; white-space: nowrap; }
         .dairy-del-btn { background: transparent; border: none; color: #f87171; opacity: 0.3; cursor: pointer; padding: 6px; border-radius: 8px; transition: opacity 0.2s; flex-shrink: 0; }
         .dairy-del-btn:hover { opacity: 1; background: rgba(248,113,113,0.1); }
+        .settle-btn { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3); color: #34d399; cursor: pointer; padding: 6px; border-radius: 8px; transition: 0.2s; flex-shrink: 0; display: flex; align-items: center; }
+        .settle-btn:hover { background: #34d399; color: #000; }
         .dairy-empty { text-align: center; padding: 3rem 1rem; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
         .dairy-loading { text-align: center; padding: 2rem; color: rgba(255,255,255,0.4); }
         @media (max-width: 850px) { .dairy-grid { grid-template-columns: 1fr; } }

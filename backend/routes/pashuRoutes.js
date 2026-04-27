@@ -99,4 +99,33 @@ router.get('/stats', async (req, res) => {
   } catch { res.status(500).json({ error: 'Server error' }); }
 });
 
+const PashuUdhaar = require('../models/PashuUdhaar');
+
+// ─── UDHAAR KHATA ──────────────────────────────────────────
+// Get all udhaar for a vet
+router.get('/udhaar', async (req, res) => {
+  try {
+    const { email } = req.query;
+    const udhaar = await PashuUdhaar.find({ email, isSettle: false }).sort({ date: -1 });
+    res.json(udhaar);
+  } catch { res.status(500).json({ error: 'Server error' }); }
+});
+
+// Add udhaar entry
+router.post('/udhaar', async (req, res) => {
+  try {
+    const entry = new PashuUdhaar(req.body);
+    await entry.save();
+    res.json(entry);
+  } catch { res.status(500).json({ error: 'Server error' }); }
+});
+
+// Settle udhaar
+router.delete('/udhaar/:id', async (req, res) => {
+  try {
+    await PashuUdhaar.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Settled' });
+  } catch { res.status(500).json({ error: 'Server error' }); }
+});
+
 module.exports = router;
