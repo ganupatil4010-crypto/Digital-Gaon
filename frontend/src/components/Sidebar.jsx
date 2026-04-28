@@ -1,5 +1,4 @@
-import React from 'react';
-import { Home, Package, Heart, User, PlusCircle, Shield, X, BookOpen, TrendingUp, Store, Milk, Stethoscope, Car, Hotel } from 'lucide-react';
+import { Home, Package, Heart, User, PlusCircle, Shield, X, BookOpen, TrendingUp, Store, Milk, Stethoscope, Car, Hotel, Sprout } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab, userRole, isOpen, onClose }) => {
   const menuItems = [
@@ -12,6 +11,7 @@ const Sidebar = ({ activeTab, setActiveTab, userRole, isOpen, onClose }) => {
     { id: 'study', label: 'Study Streak', icon: <TrendingUp size={20} /> },
     { id: 'dairy', label: 'Dairy Saathi', icon: <Milk size={20} /> },
     { id: 'pashu', label: 'Pashu Saathi', icon: <Stethoscope size={20} /> },
+    { id: 'agri', label: 'Agri Saathi', icon: <Sprout size={20} /> },
     { id: 'yatra', label: 'Yatra Saathi', icon: <Car size={20} /> },
     { id: 'hotel', label: 'Hotel Saathi', icon: <Hotel size={20} /> },
   ];

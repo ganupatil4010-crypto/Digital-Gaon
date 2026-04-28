@@ -31,6 +31,9 @@ const accessRoutes = require('./routes/accessRoutes');
 const pashuRoutes = require('./routes/pashuRoutes');
 const hotelRoutes = require('./routes/hotelRoutes');
 const yatraRoutes = require('./routes/yatraRoutes');
+const agriRoutes = require('./routes/agriRoutes');
+const AgriSale = require('./models/AgriSale');
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -87,6 +90,8 @@ app.use('/api/access', accessRoutes);
 app.use('/api/pashu', pashuRoutes);
 app.use('/api/hotel', hotelRoutes);
 app.use('/api/yatra', yatraRoutes);
+app.use('/api/agri', agriRoutes);
+
 
 // Senior Diagnostics: Global Error Handler
 app.use((err, req, res, next) => {
@@ -219,6 +224,13 @@ async function startCleanupJob() {
             });
             if (yatraResult.deletedCount > 0) {
                 console.log(`Cleaned up ${yatraResult.deletedCount} old yatra bookings (older than 30 days).`);
+            }
+
+            // Delete Agri Sales older than 60 days
+            const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+            const agriResult = await AgriSale.deleteMany({ date: { $lt: sixtyDaysAgo } });
+            if (agriResult.deletedCount > 0) {
+                console.log(`Cleaned up ${agriResult.deletedCount} old Krishi Kendra sales.`);
             }
 
             // Clean orphaned wishlist IDs (product was deleted but ID still in wishlist)
