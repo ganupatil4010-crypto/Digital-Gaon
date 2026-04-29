@@ -21,7 +21,8 @@ transporter.verify((error, success) => {
     if (error) {
         console.error('--- SMTP VERIFICATION FAILED ---');
         console.error('Error Code:', error.code);
-        console.error('Message:', error.message);
+        console.error('Error Message:', error.message);
+        console.error('Full Error:', JSON.stringify(error));
     } else {
         console.log('--- SMTP SERVER READY FOR OTP DELIVERY ✅ ---');
     }
