@@ -1,0 +1,19 @@
+services:
+  # Frontend Static Site configuration
+  - type: static
+    name: digital-gaon-frontend-new
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+
+  # Backend Web Service configuration
+  - type: web
+    name: digital-gaon-backend-new
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: MONGODB_URI
+        fromValue: "" # Should be set in Render dashboard
+      - key: JWT_SECRET
+        fromValue: "" # Should be set in Render dashboard
