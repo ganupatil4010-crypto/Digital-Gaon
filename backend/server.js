@@ -54,12 +54,19 @@ app.use((req, res, next) => {
 // Middleware
 const allowedOrigins = [
     'http://localhost:3000',
+    'http://localhost:5173',
     'https://digital-gaon.vercel.app',
-    /\.vercel\.app$/,
-    /\.netlify\.app$/
+    'https://digital-gaon-backend-new.onrender.com'
 ];
+
 app.use(cors({
-    origin: '*', 
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 
@@ -68,10 +75,13 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Backend is reachable', time: new Date().toISOString() });
 });
 
-// Routes
-console.log('DEBUG: Registering /api/auth routes...');
+// --- PRIORITY ROUTES ---
+console.log('DEBUG: Registering Priority Routes...');
 app.use('/api/auth', authRoutes);
-console.log('DEBUG: /api/auth routes registered successfully.');
+app.use('/api/access', accessRoutes);
+console.log('DEBUG: Priority Routes Registered.');
+
+// Other Routes
 app.use('/api/products', productRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/chat', chatRoutes);
@@ -81,11 +91,16 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/study', studyRoutes);
 app.use('/api/vyapar', vyaparRoutes);
 app.use('/api/dairy', dairyRoutes);
-app.use('/api/access', accessRoutes);
 app.use('/api/pashu', pashuRoutes);
 app.use('/api/hotel', hotelRoutes);
 app.use('/api/yatra', yatraRoutes);
 app.use('/api/agri', agriRoutes);
+
+// --- DEBUG CATCH-ALL (Should be at the end of API routes) ---
+app.use('/api/*', (req, res) => {
+    console.log(`[404 DEBUG] Unhandled API Request: ${req.method} ${req.originalUrl}`);
+    res.status(404).json({ error: 'API Endpoint not found', path: req.originalUrl, method: req.method });
+});
 
 
 // Senior Diagnostics: Global Error Handler
