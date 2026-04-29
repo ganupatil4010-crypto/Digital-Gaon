@@ -4,10 +4,15 @@ const Otp = require('../models/Otp');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Use STARTTLS
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false // Helps with some network environments
     }
 });
 
@@ -43,7 +48,7 @@ exports.sendOtp = async (req, res) => {
         await Otp.findOneAndUpdate(
             { email },
             { otp, expiresAt },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: 'after' }
         );
         console.log('OTP saved to MongoDB Cloud.');
 
@@ -106,7 +111,7 @@ exports.verifyOtp = async (req, res) => {
             await User.findOneAndUpdate(
                 { email },
                 { $setOnInsert: { email } },
-                { upsert: true, new: true }
+                { upsert: true, returnDocument: 'after' }
             );
 
             return res.status(200).json({ message: 'OTP verified successfully (DEV MODE)', token });
@@ -125,7 +130,7 @@ exports.verifyOtp = async (req, res) => {
         await User.findOneAndUpdate(
             { email },
             { $setOnInsert: { email } },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: 'after' }
         );
 
         // Cleanup
