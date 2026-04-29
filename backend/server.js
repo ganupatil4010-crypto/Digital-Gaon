@@ -69,7 +69,9 @@ app.get('/api/health', (req, res) => {
 });
 
 // Routes
+console.log('DEBUG: Registering /api/auth routes...');
 app.use('/api/auth', authRoutes);
+console.log('DEBUG: /api/auth routes registered successfully.');
 app.use('/api/products', productRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/chat', chatRoutes);
