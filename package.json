@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Digital Gaon Monorepo Root",
   "scripts": {
+    "build": "cd frontend && npm install && npm run build",
     "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install",
     "frontend-build": "cd frontend && npm install && npm run build",
     "backend-start": "cd backend && npm install && npm start"
