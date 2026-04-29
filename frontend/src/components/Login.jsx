@@ -12,32 +12,31 @@ const Login = ({ onGoogleLogin }) => {
         setLoading(true);
         setError('');
         try {
-            let email = '';
+            const result = await signInWithPopup(auth, googleProvider);
+            const email = result.user.email;
+            console.log(`[Auth] Triggering OTP for: ${email}`);
+
             
-            // Mock Login if DEV_MODE is likely (or skip Firebase if config is empty)
-            if (!auth.config?.apiKey || auth.config.apiKey === 'YOUR_API_KEY') {
-                console.log('MOCK MODE: Skipping Firebase Auth');
-                email = 'testuser@example.com';
-            } else {
-                const result = await signInWithPopup(auth, googleProvider);
-                email = result.user.email;
+            // Wait for backend to acknowledge OTP request before switching UI
+            // This prevents the request from being cancelled during component unmount
+            try {
+                await axios.post(`${API_BASE_URL}/api/auth/send-otp`, { email });
+                console.log('[Auth] Backend acknowledged OTP request ✅');
+            } catch (sendErr) {
+                console.error('[Auth] Failed to trigger OTP on backend:', sendErr.message);
+                // We still proceed to the OTP screen so user can try 'Resend' if needed,
+                // but at least we know why it failed.
             }
             
-            // Call onGoogleLogin immediately so the UI switches to OTP verification
             onGoogleLogin(email);
             
-            // Send email to backend to trigger OTP (background)
-            axios.post(`${API_BASE_URL}/api/auth/send-otp`, { email }).catch(err => {
-                console.error('Background OTP send failed:', err);
-                // We don't block the user but we log the error
-            });
-            
         } catch (err) {
-            console.error(err);
+            console.error('[Auth] Login Error:', err);
             setError('Failed to login with Google. Please check your internet connection.');
         } finally {
             setLoading(false);
         }
+
     };
 
     return (

@@ -4,17 +4,24 @@ const Otp = require('../models/Otp');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Use TLS (Recommended for Gmail on 587)
+    service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false // Helps in some local environments
     }
 });
+
+// Senior diagnostics: Verify SMTP connection on startup
+transporter.verify((error, success) => {
+    if (error) {
+        console.error('--- SMTP VERIFICATION FAILED ---');
+        console.error('Error Code:', error.code);
+        console.error('Message:', error.message);
+    } else {
+        console.log('--- SMTP SERVER READY FOR OTP DELIVERY ✅ ---');
+    }
+});
+
 
 
 exports.sendOtp = async (req, res) => {

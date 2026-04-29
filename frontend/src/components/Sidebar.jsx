@@ -16,10 +16,14 @@ const Sidebar = ({ activeTab, setActiveTab, userRole, isOpen, onClose }) => {
     { id: 'hotel', label: 'Hotel Saathi', icon: <Hotel size={20} /> },
   ];
 
-  // Add Admin Panel to the top if user is admin
-  if (userRole && userRole.toLowerCase() === 'admin') {
+  // Add Admin Panel to the top if user is authorized admin
+  const ADMIN_EMAIL = 'tgund5858@gmail.com';
+  const currentEmail = (localStorage.getItem('userEmail') || '').toLowerCase().trim();
+  
+  if (userRole === 'admin' && currentEmail === ADMIN_EMAIL) {
     menuItems.unshift({ id: 'admin', label: 'Admin Panel', icon: <Shield size={20} /> });
   }
+
 
   return (
     <div className={`sidebar ${isOpen ? 'open' : ''}`}>

@@ -10,12 +10,23 @@ exports.getProfile = async (req, res) => {
         }
 
         let user = await User.findOne({ email });
+        const ADMIN_EMAIL = 'tgund5858@gmail.com';
 
         if (!user) {
-            return res.status(200).json({ email, name: '', village: '', phone: '', avatar: '' });
+            const role = email === ADMIN_EMAIL ? 'admin' : 'user';
+            return res.status(200).json({ email, name: '', village: '', phone: '', avatar: '', role });
         }
 
-        res.status(200).json(user);
+        // Security: Force role based on authorized email
+        const updatedRole = email === ADMIN_EMAIL ? 'admin' : 'user';
+        
+        const responseData = {
+            ...user.toObject(),
+            role: updatedRole
+        };
+
+        res.status(200).json(responseData);
+
     } catch (error) {
         console.error('Error fetching profile:', error);
         res.status(500).json({ message: 'Failed to fetch profile' });

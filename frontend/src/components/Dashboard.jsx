@@ -37,15 +37,22 @@ const Dashboard = ({ onLogout, userEmail }) => {
     if (email) {
       axios.get(`${API_BASE_URL}/api/user/profile?email=${encodeURIComponent(email)}`)
         .then(res => {
+          const ADMIN_EMAIL = 'tgund5858@gmail.com';
           const data = res.data;
+
+          const currentEmail = (email || localStorage.getItem('userEmail') || '').toLowerCase().trim();
+          const assignedRole = currentEmail === ADMIN_EMAIL ? 'admin' : 'user';
+          
+          console.log(`[Security Check] Email: ${currentEmail}, Assigned Role: ${assignedRole}`);
+
           setUser({
-            name: data.name || email.split('@')[0],
+            name: data.name || currentEmail.split('@')[0],
             village: data.village || '',
             phone: data.phone || '',
-            role: data.role || 'user',
+            role: assignedRole,
           });
-          localStorage.setItem('userRole', data.role || 'user');
-          console.log('User Role Fetched:', data.role);
+          localStorage.setItem('userRole', assignedRole);
+
         })
         .catch(err => {
           console.log('Could not fetch profile:', err.message);
