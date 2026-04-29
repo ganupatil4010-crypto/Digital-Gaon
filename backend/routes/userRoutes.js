@@ -2,11 +2,13 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 
-router.get('/profile', userController.getProfile);
-router.put('/profile', userController.updateProfile);
+const { protect } = require('../middleware/authMiddleware');
 
-router.get('/wishlist', userController.getWishlist);
-router.post('/wishlist', userController.addToWishlist);
-router.delete('/wishlist', userController.removeFromWishlist);
+router.get('/profile', protect, userController.getProfile);
+router.put('/profile', protect, userController.updateProfile);
+
+router.get('/wishlist', protect, userController.getWishlist);
+router.post('/wishlist', protect, userController.addToWishlist);
+router.delete('/wishlist', protect, userController.removeFromWishlist);
 
 module.exports = router;

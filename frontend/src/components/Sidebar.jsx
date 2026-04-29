@@ -1,6 +1,8 @@
 import { Home, Package, Heart, User, PlusCircle, Shield, X, BookOpen, TrendingUp, Store, Milk, Stethoscope, Car, Hotel, Sprout } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Sidebar = ({ activeTab, setActiveTab, userRole, isOpen, onClose }) => {
+  const { user } = useAuth();
   const menuItems = [
     { id: 'home', label: 'Home', icon: <Home size={20} /> },
     { id: 'listings', label: 'My Listings', icon: <Package size={20} /> },
@@ -16,11 +18,11 @@ const Sidebar = ({ activeTab, setActiveTab, userRole, isOpen, onClose }) => {
     { id: 'hotel', label: 'Hotel Saathi', icon: <Hotel size={20} /> },
   ];
 
-  // Add Admin Panel to the top if user is authorized admin
-  const ADMIN_EMAIL = 'tgund5858@gmail.com';
-  const currentEmail = (localStorage.getItem('userEmail') || '').toLowerCase().trim();
+  // Add Admin Panel if user is admin
+  const isAdmin = user?.role === 'admin' || user?.email === 'tgund5858@gmail.com';
+  console.log('[Sidebar] User:', user?.email, 'Role:', user?.role, 'isAdmin:', isAdmin);
   
-  if (userRole === 'admin' && currentEmail === ADMIN_EMAIL) {
+  if (isAdmin) {
     menuItems.unshift({ id: 'admin', label: 'Admin Panel', icon: <Shield size={20} /> });
   }
 

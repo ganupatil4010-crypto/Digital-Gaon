@@ -7,7 +7,6 @@ import Home from './Home';
 import MyListings from './MyListings';
 import AddProduct from './AddProduct';
 import Wishlist from './Wishlist';
-
 import Profile from './Profile';
 import FarmerChatbot from './FarmerChatbot';
 import AdminPanel from './AdminPanel';
@@ -20,50 +19,47 @@ import YatraSaathi from './YatraSaathi';
 import HotelSaathi from './HotelSaathi';
 import KrishiKendra from './KrishiKendra';
 import FeatureLock from './FeatureLock';
+import { useAuth } from '../context/AuthContext';
 
-const Dashboard = ({ onLogout, userEmail }) => {
+const Dashboard = () => {
+  const { user: authUser, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [user, setUser] = useState({
-    name: '',
+  const [userProfile, setUserProfile] = useState({
+    name: authUser?.name || '',
     village: '',
     phone: '',
-    role: 'user',
+    role: authUser?.role || 'user',
   });
+
+  const userEmail = authUser?.email;
 
   // Fetch profile from DB on mount
   useEffect(() => {
-    const email = userEmail || localStorage.getItem('userEmail');
-    if (email) {
-      axios.get(`${API_BASE_URL}/api/user/profile?email=${encodeURIComponent(email)}`)
+    if (userEmail) {
+      axios.get(`${API_BASE_URL}/api/user/profile?email=${encodeURIComponent(userEmail)}`)
         .then(res => {
-          const ADMIN_EMAIL = 'tgund5858@gmail.com';
           const data = res.data;
-
-          const currentEmail = (email || localStorage.getItem('userEmail') || '').toLowerCase().trim();
-          const assignedRole = currentEmail === ADMIN_EMAIL ? 'admin' : 'user';
-          
-          console.log(`[Security Check] Email: ${currentEmail}, Assigned Role: ${assignedRole}`);
-
-          setUser({
-            name: data.name || currentEmail.split('@')[0],
+          setUserProfile({
+            name: data.name || authUser.name,
             village: data.village || '',
             phone: data.phone || '',
-            role: assignedRole,
+            role: authUser.role,
           });
-          localStorage.setItem('userRole', assignedRole);
-
         })
         .catch(err => {
           console.log('Could not fetch profile:', err.message);
-          // Use email username as fallback name
-          setUser(prev => ({ ...prev, name: email.split('@')[0] }));
+          setUserProfile(prev => ({ 
+            ...prev, 
+            name: authUser?.name || userEmail.split('@')[0],
+            role: authUser?.role || 'user'
+          }));
         });
     }
-  }, [userEmail]);
+  }, [userEmail, authUser]);
 
   const handleProfileUpdate = (updatedUser) => {
-    setUser(updatedUser);
+    setUserProfile(updatedUser);
   };
 
   const toggleSidebar = () => {
@@ -78,62 +74,62 @@ const Dashboard = ({ onLogout, userEmail }) => {
     switch (activeTab) {
       case 'home':
         return <Home 
-          userVillage={user.village} 
-          userEmail={userEmail || localStorage.getItem('userEmail')} 
+          userVillage={userProfile.village} 
+          userEmail={userEmail} 
           setActiveTab={setActiveTab} 
         />;
       case 'listings':
-        return <MyListings userEmail={userEmail || localStorage.getItem('userEmail')} />;
+        return <MyListings userEmail={userEmail} />;
       case 'add-product':
-        return <AddProduct userEmail={userEmail || localStorage.getItem('userEmail')} />;
+        return <AddProduct userEmail={userEmail} />;
       case 'wishlist':
-        return <Wishlist userEmail={userEmail || localStorage.getItem('userEmail')} />;
+        return <Wishlist userEmail={userEmail} />;
       case 'admin':
         return <AdminPanel />;
       case 'profile':
-        return <Profile user={user} userEmail={userEmail || localStorage.getItem('userEmail')} onUpdate={handleProfileUpdate} />;
+        return <Profile user={userProfile} userEmail={userEmail} onUpdate={handleProfileUpdate} />;
       case 'khata':
-        return <ExpenseTracker userEmail={userEmail || localStorage.getItem('userEmail')} />;
+        return <ExpenseTracker userEmail={userEmail} />;
       case 'vyapar':
         return (
-          <FeatureLock feature="vyapar" userEmail={userEmail || localStorage.getItem('userEmail')}>
-            <VyaparSaathi userEmail={userEmail || localStorage.getItem('userEmail')} />
+          <FeatureLock feature="vyapar" userEmail={userEmail}>
+            <VyaparSaathi userEmail={userEmail} />
           </FeatureLock>
         );
       case 'study':
-        return <StudyStreak userEmail={userEmail || localStorage.getItem('userEmail')} />;
+        return <StudyStreak userEmail={userEmail} />;
       case 'dairy':
         return (
-          <FeatureLock feature="dairy" userEmail={userEmail || localStorage.getItem('userEmail')}>
-            <DairySaathi userEmail={userEmail || localStorage.getItem('userEmail')} />
+          <FeatureLock feature="dairy" userEmail={userEmail}>
+            <DairySaathi userEmail={userEmail} />
           </FeatureLock>
         );
         case 'pashu':
           return (
-            <FeatureLock feature="pashu" userEmail={userEmail || localStorage.getItem('userEmail')}>
-              <PashuSaathi userEmail={userEmail || localStorage.getItem('userEmail')} />
+            <FeatureLock feature="pashu" userEmail={userEmail}>
+              <PashuSaathi userEmail={userEmail} />
             </FeatureLock>
           );
         case 'yatra':
           return (
-            <FeatureLock feature="yatra" userEmail={userEmail || localStorage.getItem('userEmail')}>
-              <YatraSaathi userEmail={userEmail || localStorage.getItem('userEmail')} />
+            <FeatureLock feature="yatra" userEmail={userEmail}>
+              <YatraSaathi userEmail={userEmail} />
             </FeatureLock>
           );
         case 'hotel':
           return (
-            <FeatureLock feature="hotel" userEmail={userEmail || localStorage.getItem('userEmail')}>
-              <HotelSaathi userEmail={userEmail || localStorage.getItem('userEmail')} />
+            <FeatureLock feature="hotel" userEmail={userEmail}>
+              <HotelSaathi userEmail={userEmail} />
             </FeatureLock>
           );
         case 'agri':
           return (
-            <FeatureLock feature="agri" userEmail={userEmail || localStorage.getItem('userEmail')}>
-              <KrishiKendra userEmail={userEmail || localStorage.getItem('userEmail')} />
+            <FeatureLock feature="agri" userEmail={userEmail}>
+              <KrishiKendra userEmail={userEmail} />
             </FeatureLock>
           );
       default:
-        return <Home userVillage={user.village} />;
+        return <Home userVillage={userProfile.village} />;
     }
   };
 
@@ -151,15 +147,15 @@ const Dashboard = ({ onLogout, userEmail }) => {
           setActiveTab(tab);
           closeSidebar(); // Close on mobile navigation
         }} 
-        userRole={user.role} 
+        userRole={userProfile.role} 
         isOpen={isSidebarOpen}
         onClose={closeSidebar}
       />
       
       <div className="main-wrapper">
         <Header 
-          userName={user.name} 
-          onLogout={onLogout} 
+          userName={userProfile.name} 
+          onLogout={logout} 
           onMenuToggle={toggleSidebar}
         />
         

@@ -1,148 +1,93 @@
-const nodemailer = require('nodemailer');
-const crypto = require('crypto');
-const Otp = require('../models/Otp');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Use SSL
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
-});
+const bcrypt = require('bcryptjs');
 
-// Senior diagnostics: Verify SMTP connection on startup
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('--- SMTP VERIFICATION FAILED ---');
-        console.error('Error Code:', error.code);
-        console.error('Error Message:', error.message);
-        console.error('Full Error:', JSON.stringify(error));
-    } else {
-        console.log('--- SMTP SERVER READY FOR OTP DELIVERY ✅ ---');
-    }
-});
+const signToken = (id, role) => {
+    return jwt.sign({ id, role }, process.env.JWT_SECRET, {
+        expiresIn: '30d'
+    });
+};
 
+const createSendToken = (user, statusCode, res) => {
+    const token = signToken(user._id, user.role);
 
+    // Remove password from output
+    user.password = undefined;
 
-exports.sendOtp = async (req, res) => {
-    console.log('--- Send OTP Request Received ---');
+    res.status(statusCode).json({
+        status: 'success',
+        token,
+        data: {
+            user
+        }
+    });
+};
+
+exports.signup = async (req, res) => {
     try {
-        const { email } = req.body;
-        console.log('Email to send to:', email);
+        console.log('[Signup] Request body:', req.body);
+        const { name, email, password } = req.body;
 
-        if (!email) {
-            console.log('Error: No email provided in request body');
-            return res.status(400).json({ message: 'Email is required' });
-        }
+        // Hardcoded Admin Check
+        const role = email === 'tgund5858@gmail.com' ? 'admin' : 'user';
+        console.log('[Signup] Assigned role:', role);
 
-        // Generate 6-digit OTP
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+        const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Save OTP to MongoDB (upsert style)
-        await Otp.findOneAndUpdate(
-            { email },
-            { otp, expiresAt },
-            { upsert: true, returnDocument: 'after' }
-        );
-        console.log('OTP saved to MongoDB Cloud.');
-
-        if (process.env.DEV_MODE === 'true') {
-            console.log('DEV_MODE is true. OTP:', otp);
-            return res.status(200).json({
-                message: 'OTP sent successfully (DEV MODE: 123456)',
-                devOtp: '123456'
-            });
-        }
-        // ... rest of email logic ...
-
-        // Send email
-        const isEmailConfigured = process.env.EMAIL_USER && process.env.EMAIL_USER !== 'your_gmail@gmail.com' && process.env.EMAIL_PASS !== 'your_app_password';
-        console.log('Is email configured?', isEmailConfigured);
-
-        if (!isEmailConfigured) {
-            console.log('Using MOCK email delivery (No credentials found in .env)');
-            return res.status(200).json({
-                message: 'OTP sent successfully (MOCK MODE: 123456)',
-                devOtp: '123456'
-            });
-        }
-
-        console.log('Attempting to send real email via Gmail SMTP...');
-
-        const mailOptions = {
-            from: `"Digital Gaon Security" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: 'Your 6-Digit OTP Code',
-            text: `Welcome! Your verification code is: ${otp}. It will expire in 5 minutes.`
-        };
-
-        // Fire and forget email sending to avoid blocking the user
-        transporter.sendMail(mailOptions).then(info => {
-            console.log('Email sent successfully in background! MessageId:', info.messageId);
-        }).catch(mailError => {
-            console.error('BACKGROUND Nodemailer Error:', mailError.message);
+        const newUser = await User.create({
+            name,
+            email,
+            password: hashedPassword,
+            role
         });
+        console.log('[Signup] User created successfully');
 
-        // Respond to user immediately
-        return res.status(200).json({ message: 'OTP sending initiated' });
-    } catch (error) {
-        console.error('General Controller Error:', error.message);
-        res.status(500).json({ message: 'Internal server error occurred' });
+        createSendToken(newUser, 201, res);
+    } catch (err) {
+        console.error('[Signup] Error occurred:', err);
+        
+        let message = 'An error occurred during sign up';
+        if (err.code === 11000) {
+            message = 'This email is already registered. Please try logging in.';
+        } else if (err.message) {
+            message = err.message;
+        }
+
+        res.status(400).json({
+            status: 'fail',
+            message
+        });
     }
 };
 
-exports.verifyOtp = async (req, res) => {
+exports.login = async (req, res) => {
     try {
-        const { email, otp } = req.body;
-        if (!email || !otp) {
-            return res.status(400).json({ message: 'Email and OTP are required' });
+        const { email, password } = req.body;
+
+        // 1) Check if email and password exist
+        if (!email || !password) {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Please provide email and password'
+            });
         }
 
-        if (process.env.DEV_MODE === 'true' && otp === '123456') {
-            const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        // 2) Check if user exists && password is correct
+        const user = await User.findOne({ email }).select('+password');
 
-            // Ensure user is created in database during DEV_MODE login
-            await User.findOneAndUpdate(
-                { email },
-                { $setOnInsert: { email } },
-                { upsert: true, returnDocument: 'after' }
-            );
-
-            return res.status(200).json({ message: 'OTP verified successfully (DEV MODE)', token });
+        if (!user || !(await user.correctPassword(password, user.password))) {
+            return res.status(401).json({
+                status: 'fail',
+                message: 'Incorrect email or password'
+            });
         }
 
-        const otpRecord = await Otp.findOne({ email, otp });
-
-        if (!otpRecord || new Date(otpRecord.expiresAt) < new Date()) {
-            return res.status(400).json({ message: 'Invalid or expired OTP' });
-        }
-
-        // OTP verified, create JWT
-        const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-        // Ensure user is created in database
-        await User.findOneAndUpdate(
-            { email },
-            { $setOnInsert: { email } },
-            { upsert: true, returnDocument: 'after' }
-        );
-
-        // Cleanup
-        await Otp.deleteOne({ email });
-
-        res.status(200).json({
-            message: 'OTP verified successfully',
-            token
+        // 3) If everything ok, send token to client
+        createSendToken(user, 200, res);
+    } catch (err) {
+        res.status(400).json({
+            status: 'fail',
+            message: err.message
         });
-    } catch (error) {
-        console.error('Error verifying OTP:', error);
-        res.status(500).json({ message: 'Failed to verify OTP' });
     }
 };
